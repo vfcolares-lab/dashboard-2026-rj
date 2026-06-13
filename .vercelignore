@@ -1,0 +1,18 @@
+# Don't ignore these files for deployment
+!index.html
+!data-rj.js
+!secoes_2022_rj.js
+!server.js
+!package.json
+!vercel.json
+
+# Ignore these
+.git
+.gitignore
+*.py
+.claude
+*.local.js
+server-local.js
+coords_rj.json
+secoes_2022_rj.json
+README.md
