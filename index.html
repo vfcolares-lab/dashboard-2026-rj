@@ -1,0 +1,2714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 RADAR ELEITORAL RIO DE JANEIRO 2026 — Lindbergh Farias</title>
+
+    <!-- CDN: Chart.js, Leaflet, Turf -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.1/dist/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.1/dist/MarkerCluster.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6"></script>
+
+    <style>
+        :root {
+            /* Background */
+            --bg-primary: #0F1419;
+            --bg-secondary: #1A1F2E;
+            --bg-card: #1E2538;
+            --bg-hover: #252D40;
+
+            /* Texto */
+            --text-primary: #E8ECF1;
+            --text-secondary: #8B95A5;
+            --text-muted: #5A6474;
+
+            /* Eixos E1-E6 */
+            --pt: #E74C3C;    /* Vermelho PT */
+            --e2: #FF6B6B;    /* Vermelho claro */
+            --e3: #F39C12;    /* Amarelo */
+            --e4: #F1C40F;    /* Amarelo claro */
+            --bolso: #2E86C1;    /* Azul */
+            --e6: #5DADE2;    /* Azul claro */
+
+            /* Classificação Lindbergh */
+            --bastiao-lindbergh: #27AE60;
+            --tendencia-lindbergh: #82E0AA;
+            --swing: #F4D03F;
+            --tendencia-anti: #E59866;
+            --bastiao-anti: #E74C3C;
+
+            /* Acentos */
+            --accent-gold: #D4A843;
+            --accent-red: #C41E3A;
+            --accent-blue: #1B4F72;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ============= LAYOUT ============= */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--bg-secondary);
+            border-right: 1px solid #2A3144;
+            overflow-y: auto;
+            padding: 2rem 0;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2A3144;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid #2A3144;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            padding-left: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-btn.active {
+            background: var(--bg-card);
+            color: var(--accent-red);
+            border-left: 3px solid var(--accent-red);
+            padding-left: calc(1rem - 3px);
+        }
+
+        /* ============= TOOLTIPS ============= */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .tooltip-container:hover .tooltip-icon {
+            background: rgba(212, 168, 67, 0.3);
+            color: var(--accent-gold);
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 280px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            text-align: left;
+            padding: 1rem;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid #2A3144;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2A3144 transparent transparent transparent;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .kpi-card {
+            position: relative;
+        }
+
+        .methodology-section {
+            background: var(--bg-card);
+            border: 1px solid #2A3144;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .methodology-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--accent-gold);
+        }
+
+        .index-explanation {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .index-box {
+            background: var(--bg-primary);
+            border: 1px solid #2A3144;
+            border-radius: 6px;
+            padding: 1.25rem;
+        }
+
+        .index-box h4 {
+            color: var(--accent-gold);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .index-box p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .index-formula {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid var(--accent-gold);
+            padding: 0.75rem;
+            margin: 0.75rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            overflow-x: auto;
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--bg-card);
+            border-bottom: 1px solid #2A3144;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .header-badge {
+            background: var(--accent-red);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Content area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ============= CARDS ============= */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid #2A3144;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .kpi-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .kpi-card.bastiao-petista .kpi-number { color: var(--e1); }
+        .kpi-card.tendencia-petista .kpi-number { color: #FF6B6B; }
+        .kpi-card.seguro-lindbergh .kpi-number { color: var(--bastiao-lindbergh); }
+        .kpi-card.dificil .kpi-number { color: #E74C3C; }
+
+        /* ============= TABELAS ============= */
+        .table-wrapper {
+            background: var(--bg-card);
+            border: 1px solid #2A3144;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-hover);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #2A3144;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #2A3144;
+        }
+
+        tr:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-bastiao-petista { background: var(--e1); color: white; }
+        .badge-bastiao-bolsonarista { background: var(--e5); color: white; }
+        .badge-bastiao-lindbergh { background: var(--bastiao-lindbergh); color: white; }
+        .badge-swing { background: var(--swing); color: #000; }
+        .badge-e1 { background: var(--e1); color: white; }
+        .badge-e5 { background: var(--e5); color: white; }
+
+        /* ============= CHARTS ============= */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid #2A3144;
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+            height: 400px;
+        }
+
+        /* Maps */
+        #map {
+            height: 600px;
+            border-radius: 8px;
+            border: 1px solid #2A3144;
+            margin-bottom: 2rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3A4455;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4A5465;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                max-height: 100px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                display: flex;
+                padding: 0;
+            }
+
+            .app-container {
+                flex-direction: column;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-section {
+                display: inline-block;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">🎯 RADAR</div>
+                <div class="sidebar-subtitle">Rio de Janeiro 2026</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <button class="nav-btn active" onclick="switchSection('overview')">📊 Overview</button>
+                <button class="nav-btn" onclick="switchSection('indicadores')">📈 Indicadores</button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Estratégia</div>
+                <button class="nav-btn" onclick="switchSection('preditivo')">🎯 Preditivo 2026</button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- HEADER -->
+            <header class="app-header">
+                <div>
+                    <h1 class="header-title">🎯 RADAR ELEITORAL RIO DE JANEIRO 2026</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;" id="headerSubtitle">Inteligência Estratégica — Carregando...</p>
+                </div>
+                <div class="header-badge">⚠️ CONFIDENCIAL</div>
+            </header>
+
+            <!-- CONTENT -->
+            <div class="content-area">
+                <!-- 1. OVERVIEW -->
+                <section id="overview" class="section active">
+                    <h2 style="margin-bottom: 1.5rem;">📊 Overview — Rio de Janeiro 2026 | Lindbergh Farias</h2>
+
+                    <!-- Estatísticas Gerais -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                        <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #E74C3C;">92</div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Municípios</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #F39C12;">4,659</div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Locais de Votação</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #3498DB;">3.8M</div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Votos Lula 2022</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #27AE60;">59K</div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Votos Lindbergh</div>
+                        </div>
+                    </div>
+
+                    <!-- 4 Indicadores Estratégicos -->
+                    <h3 style="margin: 2rem 0 1rem;">🎯 4 Indicadores Estratégicos</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                        <!-- 1. Tamanho do Aquário -->
+                        <div style="background: linear-gradient(135deg, #1E3A5F 0%, #1A1F2E 100%); border: 1px solid #2A4A7F; border-radius: 8px; padding: 1.5rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🌊 Tamanho do Aquário</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #5DADE2; margin-bottom: 0.5rem;">44.0%</div>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem;">Média de votos Lula por local</p>
+                            <canvas id="chartAquario" style="max-height: 150px; margin-top: 1rem;"></canvas>
+                        </div>
+
+                        <!-- 2. Volume Eleitoral -->
+                        <div style="background: linear-gradient(135deg, #3D2B1F 0%, #1A1F2E 100%); border: 1px solid #7F5A3A; border-radius: 8px; padding: 1.5rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📊 Volume Eleitoral</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #E59866; margin-bottom: 0.5rem;">826</div>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem;">Média de votos por local</p>
+                            <canvas id="chartVolume" style="max-height: 150px; margin-top: 1rem;"></canvas>
+                        </div>
+
+                        <!-- 3. Índice de Exploração -->
+                        <div style="background: linear-gradient(135deg, #2F5233 0%, #1A1F2E 100%); border: 1px solid #4A7A4F; border-radius: 8px; padding: 1.5rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎯 Exploração de Lindbergh</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #82E0AA; margin-bottom: 0.5rem;">0.92x</div>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem;">Média de penetração vs estado</p>
+                            <canvas id="chartExploracao" style="max-height: 150px; margin-top: 1rem;"></canvas>
+                        </div>
+
+                        <!-- 4. Consistência Histórica -->
+                        <div style="background: linear-gradient(135deg, #5D3A1A 0%, #1A1F2E 100%); border: 1px solid #8B5A2B; border-radius: 8px; padding: 1.5rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📈 Consistência Histórica</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #D4A574; margin-bottom: 0.5rem;">7.1/10</div>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem;">Estabilidade média dos locais</p>
+                            <canvas id="chartConsistencia" style="max-height: 150px; margin-top: 1rem;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Mapa Interativo -->
+                    <h3 style="margin: 2rem 0 1rem;">🗺️ Distribuição Geográfica dos Locais de Votação</h3>
+                    <div id="map" style="height: 500px; border-radius: 8px; border: 1px solid #2A3144; margin-bottom: 2rem;"></div>
+
+                    <!-- Gráficos de Distribuição -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Distribuição por Aquário (%)</h4>
+                            <canvas id="chartDistAquario"></canvas>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Distribuição por Consistência (score)</h4>
+                            <canvas id="chartDistConsistencia"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Oportunidades Subutilizadas -->
+                    <h3 style="margin: 2rem 0 1rem;">💎 Oportunidades Subutilizadas</h3>
+                    <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                                Locais de votação com mercado pequeno (&lt; média) mas com forte afinidade ideológica a Lula. Potencial de crescimento para Lindbergh.
+                            </p>
+                            <button id="btnDownloadOportunidades" style="background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; white-space: nowrap;">⬇️ Baixar CSV</button>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table id="tableOportunidades" style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+                                <thead style="background-color: #1A1F2E; border-bottom: 2px solid #2A3144;">
+                                    <tr>
+                                        <th style="text-align: left; padding: 0.75rem; color: #5DADE2;">📍 Local</th>
+                                        <th style="text-align: left; padding: 0.75rem; color: #E59866;">📊 Volume</th>
+                                        <th style="text-align: left; padding: 0.75rem; color: #5DADE2;">🌊 Aquário</th>
+                                        <th style="text-align: left; padding: 0.75rem; color: #27AE60;">🏘️ Município</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyOportunidades"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Metodologia -->
+                    <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; margin-top: 2rem;">
+                        <h3 style="color: var(--accent-gold); margin-bottom: 1rem;">📚 Os 4 Indicadores</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                            <div>
+                                <h4 style="color: #5DADE2; margin-bottom: 0.5rem;">🌊 Tamanho do Aquário</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary);">Percentual de votos Lula vs Bolsonaro. Mostra afinidade ideológica do território. Range: 10%-85%</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #E59866; margin-bottom: 0.5rem;">📊 Volume Eleitoral</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary);">Total absoluto de votos Lula em cada local. Indica tamanho do mercado a explorar.</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #82E0AA; margin-bottom: 0.5rem;">🎯 Índice de Exploração</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary);">Taxa de penetração de Lindbergh vs média estadual (1.47%). Classificado por percentis para refletir a distribuição real.</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #D4A574; margin-bottom: 0.5rem;">📈 Consistência Histórica</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary);">Estabilidade eleitoral (baseada na distribuição do Aquário). Range: 4.0-8.5/10</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. INDICADORES ESTRATÉGICOS -->
+                <section id="indicadores" class="section">
+                    <h2 style="margin-bottom: 1.5rem;">📈 4 Indicadores Estratégicos — Análise Territorial</h2>
+
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                        Os 4 indicadores abaixo medem diferentes dimensões do potencial eleitoral de cada território.
+                        Use-os para identificar oportunidades, entender a saturação de votos e priorizar ações.
+                    </p>
+
+                    <div class="kpi-grid" style="gap: 2rem; margin-bottom: 2rem;">
+                        <!-- 1. TAMANHO DO AQUÁRIO -->
+                        <div class="kpi-card" style="background: linear-gradient(135deg, #1E3A5F 0%, #1A1F2E 100%); border: 1px solid #2A4A7F; padding: 2rem;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🌊</div>
+                            <h3 style="color: #5DADE2; margin-bottom: 0.5rem;">Tamanho do Aquário</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                <strong>O que mede:</strong> Afinidade ideológica do território (% votos Lula em 2022)
+                            </p>
+                            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem;">
+                                <strong>Classificação:</strong><br>
+                                • 🟢 Oceano Lulista: &gt;45% Lula<br>
+                                • 🔵 Aquário Médio: 40-45% Lula<br>
+                                • 🟡 Aquário Pequeno: 35-40% Lula<br>
+                                • 🔴 Território Hostil: &lt;35% Lula
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                                <em>Responde:</em> Quão favorável é este território ao nosso campo político?
+                            </p>
+                        </div>
+
+                        <!-- 2. VOLUME ELEITORAL -->
+                        <div class="kpi-card" style="background: linear-gradient(135deg, #3D2B1F 0%, #1A1F2E 100%); border: 1px solid #7F5A3A; padding: 2rem;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📊</div>
+                            <h3 style="color: #E59866; margin-bottom: 0.5rem;">Volume Eleitoral</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                <strong>O que mede:</strong> Tamanho absoluto do mercado eleitoral (votos Lula 2022)
+                            </p>
+                            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem;">
+                                <strong>Classificação:</strong><br>
+                                • 📈 Grande: Top 33% em votos Lula<br>
+                                • 📊 Médio: 33-66% em votos Lula<br>
+                                • 📉 Pequeno: Bottom 33% em votos Lula
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                                <em>Responde:</em> Quantos votos há disponíveis neste território?
+                            </p>
+                        </div>
+
+                        <!-- 3. ÍNDICE DE EXPLORAÇÃO -->
+                        <div class="kpi-card" style="background: linear-gradient(135deg, #2B3D1F 0%, #1A1F2E 100%); border: 1px solid #5A7F3A; padding: 2rem;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎯</div>
+                            <h3 style="color: #82E0AA; margin-bottom: 0.5rem;">Índice de Exploração</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                <strong>O que mede:</strong> Conversão de votos Lindbergh vs média estadual
+                            </p>
+                            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem;">
+                                <strong>Classificação (Quartis):</strong><br>
+                                • 🔴 Pouco Explorado: &lt;0.9529 (bottom 25%)<br>
+                                • 🟡 Moderado: 0.9529-0.9958 (25-50%)<br>
+                                • 🟠 Explorado: 0.9958-1.0203 (50-75%)<br>
+                                • 🔥 Hiperexplorado: ≥1.0203 (top 25%)
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                                <em>Responde:</em> Lindbergh já capturou o potencial deste território?
+                            </p>
+                        </div>
+
+                        <!-- 4. CONSISTÊNCIA HISTÓRICA -->
+                        <div class="kpi-card" style="background: linear-gradient(135deg, #4A2B5F 0%, #1A1F2E 100%); border: 1px solid #7F5AAF; padding: 2rem;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📈</div>
+                            <h3 style="color: #D7BEE8; margin-bottom: 0.5rem;">Consistência Histórica</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                <strong>O que mede:</strong> Estabilidade de comportamento eleitoral ao longo do tempo
+                            </p>
+                            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem;">
+                                <strong>Classificação:</strong><br>
+                                • 🏔️ Muito Estável: Comportamento previsível<br>
+                                • ⚖️ Estável: Variação moderada<br>
+                                • 🌊 Instável: Comportamento volátil
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                                <em>Responde:</em> Este território costuma se comportar sempre da mesma forma?
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; margin-top: 2rem;">
+                        <h3 style="color: var(--accent-gold); margin-bottom: 1rem;">📍 Como Usar Esses Indicadores</h3>
+                        <ul style="list-style: none; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+                            <li>✓ <strong>Aquário Grande + Pouco Explorado</strong> = Oportunidade de crescimento</li>
+                            <li>✓ <strong>Aquário Pequeno + Hiperexplorado</strong> = Saturação, buscar outros territórios</li>
+                            <li>✓ <strong>Muito Instável</strong> = Potencial para mobilização, territory mais permeável</li>
+                            <li>✓ <strong>Muito Estável</strong> = Estrutura consolidada, apostar em bases sólidas</li>
+                        </ul>
+                    </div>
+
+                    <!-- ANÁLISE INTERATIVA DOS INDICADORES -->
+                    <h3 style="margin-top: 3rem; margin-bottom: 1.5rem; border-top: 2px solid #2A3144; padding-top: 2rem; color: var(--accent-gold);">🔍 Locais de Votação por Município</h3>
+
+                    <!-- SELETOR DE MUNICÍPIO -->
+                    <div style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Selecione o município:</label>
+                            <select id="municipioSelectIndicadores" style="padding: 0.75rem; width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid #2A3144; border-radius: 4px; font-weight: 600;">
+                                <option value="">-- Escolha um município --</option>
+                            </select>
+                        </div>
+                        <button id="downloadCSVIndicadores" style="padding: 0.75rem 1.5rem; background: var(--accent-gold); color: #000; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; display: none;">⬇️ Baixar CSV</button>
+                    </div>
+
+                    <!-- TABELA DE LOCAIS COM INDICADORES -->
+                    <div class="table-wrapper" id="indicadoresTableWrapper" style="display: none;">
+                        <div style="margin-bottom: 1rem; color: var(--text-secondary);">
+                            📍 Mostrando <span id="indicadoresLocaisCount">0</span> locais de votação •
+                            <span id="indicadoresMunicipioInfo"></span>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 0.9rem;">
+                            <thead>
+                                <tr style="background: var(--bg-hover);">
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #2A3144;">Local de Votação</th>
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #2A3144;">Endereço</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">🌊 Aquário</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">📊 Volume</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">🎯 Exploração</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">📈 Consistência</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">Lat/Lon</th>
+                                </tr>
+                            </thead>
+                            <tbody id="indicadoresTableBody">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="indicadoresEmptyState" style="margin-top: 2rem; padding: 2rem; text-align: center; color: var(--text-secondary); background: var(--bg-card); border-radius: 8px;">
+                        👆 Selecione um município acima para visualizar os locais de votação
+                    </div>
+                </section>
+
+                <!-- 2. PREDITIVO -->
+                <section id="preditivo" class="section">
+                    <h2 style="margin-bottom: 1.5rem;">🎯 Modelo Preditivo 2026</h2>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div class="chart-container">
+                            <canvas id="preditivoChart"></canvas>
+                        </div>
+                        <div class="chart-container" style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-around; gap: 1rem;">
+                            <div>
+                                <h4 style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">Municípios Competitivos</h4>
+                                <div style="font-size: 2rem; font-weight: 800; color: #F39C12;" id="municipiosCompetitivos">—</div>
+                                <small style="color: var(--text-secondary); font-size: 0.75rem;">BATTLEGROUND + Competitivos</small>
+                            </div>
+
+                            <div style="border-top: 1px solid #2A3144; padding-top: 0.8rem;">
+                                <h4 style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">Tendência Geral</h4>
+                                <div style="font-size: 2rem; font-weight: 800;" id="tendenciaGeral">—</div>
+                                <small style="color: var(--text-secondary); font-size: 0.75rem;" id="tendenciaLabel">—</small>
+                            </div>
+
+                            <div style="border-top: 1px solid #2A3144; padding-top: 0.8rem;">
+                                <h4 style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">Margem Esperada 2026</h4>
+                                <div style="font-size: 2rem; font-weight: 800;" id="margemEsperada">—</div>
+                                <small style="color: var(--text-secondary); font-size: 0.75rem;">PT vs Bolsonaro</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 2rem 0 1rem;">Prioridades por Impacto</h3>
+                    <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+                        <table id="prioridades">
+                            <thead>
+                                <tr>
+                                    <th>Município</th>
+                                    <th>Score Preditivo</th>
+                                    <th>Prognóstico</th>
+                                    <th>Tendência</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 3. DADOS (OCULTO) -->
+                <section id="dados" class="section" style="display: none;">
+                    <h2 style="margin-bottom: 1.5rem;">📋 Dados Brutos — Todos os Municípios</h2>
+
+                    <div style="margin-bottom: 1rem;">
+                        <input type="text" id="searchInput" placeholder="🔍 Buscar município..." style="padding: 0.75rem; width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid #2A3144; border-radius: 4px; margin-bottom: 1rem;">
+                    </div>
+
+                    <div class="table-wrapper" style="max-height: 600px; overflow-y: auto;">
+                        <table id="allDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Município</th>
+                                    <th>IN</th>
+                                    <th>Classe Nac.</th>
+                                    <th>IL</th>
+                                    <th>Classe Lindbergh</th>
+                                    <th>Eixo</th>
+                                    <th>Pred. 2026</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATA -->
+    <script src="data-rj.js"></script>
+    <script src="secoes_2022_rj.js"></script>
+    <script>
+        // Carregar coords_rj.json dinamicamente
+        fetch('coords_rj.json')
+            .then(response => response.json())
+            .then(data => {
+                window.MUNICIPIOS_COORDS = data;
+                console.log('✅ Coordenadas dos municípios carregadas:', Object.keys(data).length, 'cidades');
+            })
+            .catch(err => console.error('❌ Erro ao carregar coords_rj.json:', err));
+    </script>
+
+    <!-- SCRIPTS -->
+    <!-- Seções eleitorais (opcional para RJ) -->
+    <!-- <script src="secoes_2022_rj.js"></script> -->
+
+    <script>
+        let chartsInstances = {};
+        let mapInstance = null;
+        let mapSecoesInstance = null;
+        let currentMunicipio = null;
+
+        // ============= INIT =============
+        // DIAGNÓSTICO
+        function runDiagnostics() {
+            console.log('\n========== DIAGNÓSTICO DO DASHBOARD ==========\n');
+
+            console.log('1️⃣ Verificando DASHBOARD_DATA_RJ...');
+            if (typeof DASHBOARD_DATA_RJ === 'undefined') {
+                console.error('   ❌ DASHBOARD_DATA_RJ não definido!');
+                return false;
+            }
+            console.log('   ✅ DASHBOARD_DATA_RJ existe');
+
+            if (!DASHBOARD_DATA_RJ.municipios) {
+                console.error('   ❌ DASHBOARD_DATA_RJ.municipios não existe!');
+                return false;
+            }
+            console.log('   ✅ DASHBOARD_DATA_RJ.municipios existe');
+
+            const numMun = Object.keys(DASHBOARD_DATA_RJ.municipios).length;
+            console.log('   ✅ Total de municípios:', numMun);
+
+            console.log('\n2️⃣ Testando getMunicipios()...');
+            try {
+                const mun = getMunicipios();
+                console.log('   ✅ getMunicipios() retorna:', mun.length, 'municípios');
+
+                if (mun.length > 0) {
+                    console.log('   ✅ Primeiro município:', mun[0].name, 'IN:', mun[0].indice_nacional, 'IL:', mun[0].indice_eb);
+                }
+            } catch (e) {
+                console.error('   ❌ Erro em getMunicipios():', e.message);
+                return false;
+            }
+
+            console.log('\n3️⃣ Verificando dados locais de votação...');
+            let totalLocais = 0;
+            for (let mun in DASHBOARD_DATA_RJ.municipios) {
+                totalLocais += DASHBOARD_DATA_RJ.municipios[mun].locais_votacao?.length || 0;
+            }
+            if (totalLocais === 0) {
+                console.error('   ❌ Nenhum local de votação encontrado!');
+                return false;
+            }
+            console.log('   ✅ Total de locais de votação:', totalLocais);
+
+            console.log('\n✅ TODOS OS TESTES PASSARAM!\n');
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Rodar diagnóstico
+            const diagOk = runDiagnostics();
+
+            if (!diagOk) {
+                console.error('❌ Diagnóstico falhou! Verifique os erros acima.');
+                return;
+            }
+
+            if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.municipios) {
+                console.error('❌ ERRO: data-rj.js não foi carregado!');
+                console.error('   Certifique-se de que está usando HTTP (http://localhost:8000)');
+                alert('⚠️ ERRO: Dados não carregados.\n\nUse:\ncd relatorios tse/dashboard-2026\npython3 -m http.server 8000\n\nDepois acesse: http://localhost:8000');
+                return;
+            }
+            const numMunicipios = Object.keys(DASHBOARD_DATA_RJ.municipios).length;
+            console.log('✅ Dashboard RJ inicializado com', numMunicipios, 'municípios');
+
+            // Inicializar Overview RJ com os 4 indicadores
+            setTimeout(() => initializeOverviewRJ(), 500);
+
+            // Inicializar Preditivo 2026
+            populatePreditivo();
+
+            // Inicializar dropdown de município para a seção Indicadores (se existir)
+            if (document.getElementById('municipioSelectIndicadores')) {
+                populateMunicipoSelect();
+            }
+        });
+
+        // ============= KPIs DINÂMICOS =============
+        function populateKPIs() {
+            const municipios = getMunicipios();
+            const totalMunicipios = municipios.length;
+            const { counts: predCounts, quintilSize } = calculatePreditivoLindbergh();
+
+            let counts = {
+                bastiao_petista: 0,
+                tendencia_petista: 0,
+                seguro_lindbergh: 0,
+                competitivo_pro: 0,
+                battleground: 0,
+                competitivo_contra: 0,
+                dificil: 0
+            };
+
+            municipios.forEach(mun => {
+                // Contar Bastião Petista
+                if (mun.classificacao === 'Bastião Petista') {
+                    counts.bastiao_petista++;
+                }
+
+                // Contar Tendência Petista
+                if (mun.classificacao === 'Tendência Petista') {
+                    counts.tendencia_petista++;
+                }
+
+                // Contar por preditivo 2026
+                if (mun.preditivo_2026?.classificacao === 'SEGURO LINDBERGH') {
+                    counts.seguro_lindbergh++;
+                } else if (mun.preditivo_2026?.classificacao === 'COMPETITIVO PRÓ-LINDBERGH') {
+                    counts.competitivo_pro++;
+                } else if (mun.preditivo_2026?.classificacao === 'BATTLEGROUND') {
+                    counts.battleground++;
+                } else if (mun.preditivo_2026?.classificacao === 'COMPETITIVO CONTRA') {
+                    counts.competitivo_contra++;
+                } else if (mun.preditivo_2026?.classificacao === 'DIFÍCIL') {
+                    counts.dificil++;
+                }
+            });
+
+            // Calcular percentuais
+            const seguroPct = ((counts.seguro_lindbergh / totalMunicipios) * 100).toFixed(0);
+            const dificilPct = ((counts.dificil / totalMunicipios) * 100).toFixed(0);
+
+            // Atualizar header
+            document.getElementById('headerSubtitle').textContent = `Inteligência Estratégica — ${totalMunicipios} Municípios | 4 Eleições | Modelo Preditivo 2026`;
+
+            // Renderizar KPIs com tooltips
+            const kpiGrid = document.getElementById('kpiGrid');
+            kpiGrid.innerHTML = `
+                <div class="kpi-card bastiao-petista">
+                    <div class="kpi-number">${counts.bastiao_petista}</div>
+                    <div class="kpi-label">
+                        Bastião Petista
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">Municípios onde PT venceu por >10pp em 2022. Base consolidada para Lindbergh no contexto federal.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card tendencia-petista">
+                    <div class="kpi-number">${counts.tendencia_petista}</div>
+                    <div class="kpi-label">
+                        Tendência Petista
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">Municípios onde PT venceu por 5-10pp em 2022. Espaço para expansão de votação para Lindbergh.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card seguro-lindbergh">
+                    <div class="kpi-number" style="color: var(--bastiao-lindbergh);">${counts.seguro_lindbergh}</div>
+                    <div class="kpi-label">
+                        Seguro Lindbergh 2026
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text"><strong>PROGNÓSTICO 2026:</strong> Top ${seguroPct}% (${counts.seguro_lindbergh} municípios) com melhor performance histórica de Lindbergh. Reeleição viável. Consolidar base.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card dificil">
+                    <div class="kpi-number" style="color: #E74C3C;">${counts.dificil}</div>
+                    <div class="kpi-label">
+                        Difícil 2026
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text"><strong>ZONA DE RISCO:</strong> Bottom ${dificilPct}% (${counts.dificil} municípios) com menor histórico de Lindbergh. Requer análise detalhada e alocação estratégica.</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Atualizar cards da section na Overview
+            updateOverviewCards(counts, totalMunicipios);
+        }
+
+        function updateOverviewCards(counts, total) {
+            // Atualizar cards de preditivo 2026 com números reais
+            const cards = document.querySelectorAll('[data-card-type]');
+
+            const cardUpdates = {
+                'seguro': { count: counts.seguro_lindbergh, pct: ((counts.seguro_lindbergh / total) * 100).toFixed(1) },
+                'competitivo-pro': { count: counts.competitivo_pro, pct: ((counts.competitivo_pro / total) * 100).toFixed(1) },
+                'battleground': { count: counts.battleground, pct: ((counts.battleground / total) * 100).toFixed(1) },
+                'competitivo-contra': { count: counts.competitivo_contra, pct: ((counts.competitivo_contra / total) * 100).toFixed(1) },
+                'dificil': { count: counts.dificil, pct: ((counts.dificil / total) * 100).toFixed(1) }
+            };
+
+            cards.forEach(card => {
+                const type = card.getAttribute('data-card-type');
+                if (cardUpdates[type]) {
+                    const titleEl = card.querySelector('[data-card-title]');
+                    if (titleEl) {
+                        const baseText = titleEl.getAttribute('data-base-text');
+                        titleEl.textContent = `${baseText} — ${cardUpdates[type].count} municípios (${cardUpdates[type].pct}%)`;
+                    }
+                }
+            });
+
+            console.log('✅ Cards de Overview atualizados com números reais:', cardUpdates);
+        }
+
+        // ============= NAVEGAÇÃO =============
+        // ============= INICIALIZAR OVERVIEW RJ =============
+        function initializeOverviewRJ() {
+            if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.municipios) {
+                console.log('⏳ Aguardando DASHBOARD_DATA_RJ...');
+                setTimeout(initializeOverviewRJ, 100);
+                return;
+            }
+
+            console.log('✅ Inicializando Overview RJ...');
+
+            // Coletar todos os dados dos locais de votação (com municipio)
+            let allLocais = [];
+            for (let municipio in DASHBOARD_DATA_RJ.municipios) {
+                const locais = DASHBOARD_DATA_RJ.municipios[municipio].locais_votacao || [];
+                locais.forEach(local => {
+                    local.municipio = municipio;
+                });
+                allLocais = allLocais.concat(locais);
+            }
+
+            if (allLocais.length === 0) {
+                console.warn('⚠️ Nenhum local de votação encontrado');
+                return;
+            }
+
+            // Calcular estatísticas
+            const aquarios = allLocais.map(l => l.tamanho_aquario_pct);
+            const volumes = allLocais.map(l => l.volume_eleitoral);
+            const exploracoes = allLocais.map(l => l.indice_exploracao);
+            const consistencias = allLocais.map(l => l.consistencia_historica);
+
+            const avgAquario = (aquarios.reduce((a, b) => a + b, 0) / aquarios.length).toFixed(1);
+            const avgVolume = Math.round(volumes.reduce((a, b) => a + b, 0) / volumes.length);
+            const avgExploracao = (exploracoes.reduce((a, b) => a + b, 0) / exploracoes.length).toFixed(2);
+            const avgConsistencia = (consistencias.reduce((a, b) => a + b, 0) / consistencias.length).toFixed(1);
+
+            console.log(`📊 Médias: Aquário=${avgAquario}%, Volume=${avgVolume}, Exploração=${avgExploracao}x, Consistência=${avgConsistencia}/10`);
+
+            // Criar gráficos de distribuição
+            createCharts(aquarios, volumes, exploracoes, consistencias);
+
+            // Popular oportunidades subutilizadas
+            populateOportunidades(allLocais, avgVolume);
+
+            // Criar mapa
+            setTimeout(() => createMapOverview(allLocais), 200);
+        }
+
+        function createCharts(aquarios, volumes, exploracoes, consistencias) {
+            console.log('🎨 Criando gráficos com', aquarios.length, 'dados');
+
+            try {
+                // Gráfico de distribuição do Aquário (doughnut mais simples)
+                const ctxAquario = document.getElementById('chartDistAquario');
+                if (ctxAquario && window.Chart) {
+                    // Contar quantos em cada faixa
+                    const ranges = {
+                        '10-25%': aquarios.filter(v => v < 25).length,
+                        '25-35%': aquarios.filter(v => v >= 25 && v < 35).length,
+                        '35-45%': aquarios.filter(v => v >= 35 && v < 45).length,
+                        '45-55%': aquarios.filter(v => v >= 45 && v < 55).length,
+                        '55-65%': aquarios.filter(v => v >= 55 && v < 65).length,
+                        '65-85%': aquarios.filter(v => v >= 65).length
+                    };
+
+                    new Chart(ctxAquario, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(ranges),
+                            datasets: [{
+                                data: Object.values(ranges),
+                                backgroundColor: ['#E74C3C', '#F39C12', '#F4D03F', '#5DADE2', '#3498DB', '#27AE60']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'bottom' } }
+                        }
+                    });
+                    console.log('   ✅ Gráfico Aquário criado');
+                }
+            } catch (e) {
+                console.error('   ❌ Erro ao criar gráfico Aquário:', e.message);
+            }
+
+            try {
+                // Gráfico de distribuição da Consistência
+                const ctxConsist = document.getElementById('chartDistConsistencia');
+                if (ctxConsist && window.Chart) {
+                    const ranges = {
+                        '4.0-5.0': consistencias.filter(v => v < 5).length,
+                        '5.0-6.0': consistencias.filter(v => v >= 5 && v < 6).length,
+                        '6.0-7.0': consistencias.filter(v => v >= 6 && v < 7).length,
+                        '7.0-8.0': consistencias.filter(v => v >= 7 && v < 8).length,
+                        '8.0-8.5': consistencias.filter(v => v >= 8).length
+                    };
+
+                    new Chart(ctxConsist, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(ranges),
+                            datasets: [{
+                                data: Object.values(ranges),
+                                backgroundColor: ['#E74C3C', '#F39C12', '#F4D03F', '#82E0AA', '#27AE60']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'bottom' } }
+                        }
+                    });
+                    console.log('   ✅ Gráfico Consistência criado');
+                }
+            } catch (e) {
+                console.error('   ❌ Erro ao criar gráfico Consistência:', e.message);
+            }
+        }
+
+        function createMapOverview(locais) {
+            const mapEl = document.getElementById('map');
+            if (!mapEl || !mapEl.parentElement.offsetHeight) return;
+
+            const map = L.map('map').setView([-22.9, -43.2], 9);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Agrupar por cor do Aquário
+            locais.forEach(local => {
+                if (!local.latitude || !local.longitude) return;
+
+                let color = '#CCCCCC';
+                if (local.tamanho_aquario_pct > 45) color = '#27AE60'; // Verde
+                else if (local.tamanho_aquario_pct > 40) color = '#5DADE2'; // Azul
+                else if (local.tamanho_aquario_pct > 35) color = '#F39C12'; // Laranja
+                else color = '#E74C3C'; // Vermelho
+
+                L.circleMarker([local.latitude, local.longitude], {
+                    radius: 4,
+                    fillColor: color,
+                    color: '#000',
+                    weight: 0.5,
+                    opacity: 0.7,
+                    fillOpacity: 0.6
+                }).addTo(map);
+            });
+
+            console.log('✅ Mapa criado com', locais.length, 'locais');
+        }
+
+        function populateOportunidades(allLocais, avgVolume) {
+            // Filtrar locais com volume < média E aquário > 44%
+            const oportunidades = allLocais.filter(local =>
+                local.volume_eleitoral < avgVolume &&
+                local.tamanho_aquario_pct > 44
+            );
+
+            // Ordenar por Aquário (descendente) para mostrar os melhores primeiro
+            oportunidades.sort((a, b) => b.tamanho_aquario_pct - a.tamanho_aquario_pct);
+
+            // Pegar top 15
+            const top15 = oportunidades.slice(0, 15);
+
+            // Preencher tabela
+            const tbody = document.getElementById('tbodyOportunidades');
+            if (!tbody) {
+                console.warn('⚠️ tbodyOportunidades não encontrado');
+                return;
+            }
+
+            tbody.innerHTML = '';
+            top15.forEach((local, idx) => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #2A3144';
+                row.innerHTML = `
+                    <td style="padding: 0.75rem; color: var(--text-secondary);">${local.local_nome || 'N/A'}</td>
+                    <td style="padding: 0.75rem; color: #E59866; font-weight: 500;">${local.volume_eleitoral || 0} votos</td>
+                    <td style="padding: 0.75rem; color: #5DADE2; font-weight: 500;">${local.tamanho_aquario_pct?.toFixed(1) || 'N/A'}%</td>
+                    <td style="padding: 0.75rem; color: #27AE60;">${local.municipio || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            console.log(`💎 Oportunidades Subutilizadas: ${oportunidades.length} locais encontrados, mostrando top ${Math.min(15, top15.length)}`);
+
+            // Armazenar oportunidades para download
+            window.oportunidadesParaDownload = oportunidades;
+
+            // Adicionar listener ao botão de download
+            const btnDownload = document.getElementById('btnDownloadOportunidades');
+            if (btnDownload) {
+                btnDownload.onclick = downloadOportunidadesCSV;
+            }
+        }
+
+        function downloadOportunidadesCSV() {
+            if (!window.oportunidadesParaDownload || window.oportunidadesParaDownload.length === 0) {
+                alert('❌ Nenhuma oportunidade para baixar');
+                return;
+            }
+
+            const oportunidades = window.oportunidadesParaDownload;
+
+            // Cabeçalhos do CSV
+            const headers = [
+                'Local de Votação',
+                'Endereço',
+                'Município',
+                'Volume (Votos Lula)',
+                'Aquário (%)',
+                'Índice Exploração',
+                'Categoria Exploração',
+                'Consistência Histórica',
+                'Votos Lindbergh',
+                'Lat/Lon'
+            ];
+
+            // Montar linhas
+            const rows = oportunidades.map(local => [
+                `"${(local.local_nome || '').replace(/"/g, '""')}"`,
+                `"${(local.local_endereco || '').replace(/"/g, '""')}"`,
+                local.municipio || '',
+                local.volume_eleitoral || 0,
+                (local.tamanho_aquario_pct || 0).toFixed(1),
+                (local.indice_exploracao || 0).toFixed(4),
+                getClassificacaoExplacacao(local.indice_exploracao) || 'N/A',
+                (local.consistencia_historica || 0).toFixed(1),
+                local.lindbergh_votos || 0,
+                local.latitude && local.longitude ? `${local.latitude},${local.longitude}` : ''
+            ]);
+
+            // Montar CSV
+            let csv = headers.join(';') + '\n';
+            rows.forEach(row => {
+                csv += row.join(';') + '\n';
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `oportunidades_subutilizadas_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log(`✅ CSV com ${oportunidades.length} oportunidades baixado!`);
+        }
+
+        function getClassificacaoExplacacao(indice) {
+            // Limites quartil-based: 25% cada categoria
+            if (indice < 0.9529) return 'Pouco explorado';
+            if (indice < 0.9958) return 'Moderado';
+            if (indice < 1.0203) return 'Explorado';
+            return 'Hiperexplorado';
+        }
+
+        // ============= PREDITIVO 2026 =============
+        function populatePreditivo() {
+            if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.preditivo_2026) {
+                console.log('⏳ Preditivo 2026 ainda não carregado');
+                return;
+            }
+
+            console.log('🎯 Populando Preditivo 2026...');
+
+            const municipios = DASHBOARD_DATA_RJ.preditivo_2026.municipios;
+
+            // Contar por classificação
+            const counts = {};
+            let totalVolume = 0;
+            let totalAquario = 0;
+            municipios.forEach(m => {
+                counts[m.classificacao] = (counts[m.classificacao] || 0) + 1;
+                totalVolume += m.volume;
+                totalAquario += m.aquario;
+            });
+
+            // Preencher tabela
+            const tbody = document.querySelector('#prioridades tbody');
+            if (tbody) {
+                tbody.innerHTML = municipios.map(m => `
+                    <tr>
+                        <td style="padding: 0.75rem; border-bottom: 1px solid #2A3144;">
+                            <strong>${m.emoji} ${m.nome}</strong>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            <strong style="font-size: 1.1rem;">${m.score.toFixed(2)}</strong>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            ${m.classificacao}
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144; font-size: 0.85rem;">
+                            Vol: ${(m.volume/1000).toFixed(0)}k | Aq: ${m.aquario.toFixed(1)}%
+                        </td>
+                    </tr>
+                `).join('');
+                console.log('   ✅ Tabela preenchida');
+            }
+
+            // Preencher cards
+            const competitivos = (counts['COMPETITIVO'] || 0) + (counts['DESAFIO'] || 0);
+            const elem1 = document.getElementById('municipiosCompetitivos');
+            if (elem1) {
+                elem1.textContent = competitivos;
+                console.log('   ✅ Competitivos:', competitivos);
+            }
+
+            const bastiao = counts['BASTIÃO LINDBERGH'] || 0;
+            const forte = counts['FORTE PRÓ-LINDBERGH'] || 0;
+            const tendenciaEmoji = bastiao > 0 ? '🟢' : forte > 0 ? '🟡' : competitivos > 0 ? '🟠' : '🔴';
+
+            const elem2 = document.getElementById('tendenciaGeral');
+            if (elem2) {
+                elem2.textContent = tendenciaEmoji;
+                console.log('   ✅ Tendência:', tendenciaEmoji);
+            }
+
+            const elem3 = document.getElementById('tendenciaLabel');
+            if (elem3) {
+                elem3.textContent =
+                    bastiao > 0 ? 'Bastião Lindbergh' :
+                    forte > 0 ? 'Forte Pró-Lindbergh' :
+                    competitivos > 0 ? 'Competitivo' : 'Difícil';
+            }
+
+            // Calcular margem esperada (média de Aquário)
+            const aquarioMedio = (totalAquario / municipios.length);
+            const margemEsperada = (aquarioMedio - 44).toFixed(1); // 44% é a média Lula 2022
+            const elem4 = document.getElementById('margemEsperada');
+            if (elem4) {
+                elem4.textContent = margemEsperada + '%';
+                console.log('   ✅ Margem:', margemEsperada + '%');
+            }
+
+            // Criar gráfico de distribuição
+            const ctxPreditivo = document.getElementById('preditivoChart');
+            if (ctxPreditivo && window.Chart) {
+                try {
+                    new Chart(ctxPreditivo, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [
+                                '🟢 Bastião',
+                                '🟡 Forte',
+                                '🟠 Competitivo',
+                                '🔴 Desafio',
+                                '⚫ Difícil'
+                            ],
+                            datasets: [{
+                                data: [
+                                    counts['BASTIÃO LINDBERGH'] || 0,
+                                    counts['FORTE PRÓ-LINDBERGH'] || 0,
+                                    counts['COMPETITIVO'] || 0,
+                                    counts['DESAFIO'] || 0,
+                                    counts['DIFÍCIL'] || 0
+                                ],
+                                backgroundColor: ['#27AE60', '#F39C12', '#F4D03F', '#E74C3C', '#95A5A6']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                    console.log('   ✅ Gráfico criado');
+                } catch (e) {
+                    console.error('   ❌ Erro ao criar gráfico:', e.message);
+                }
+            }
+
+            console.log('✅ Preditivo 2026 populado!');
+        }
+
+        function switchSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Remove active from buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Mark button as active
+            event.target.classList.add('active');
+
+            // Re-initialize maps if needed
+            if (sectionId === 'overview' && mapInstance === null) {
+                setTimeout(() => initMaps(), 100);
+            }
+
+            // Initialize map-secoes for impulsionamento tab
+            if (sectionId === 'impulsionamento' && mapSecoesInstance === null) {
+                setTimeout(() => initMapSecoes(), 100);
+            }
+        }
+
+        // ============= CÁLCULO DINÂMICO DE QUINTIS LINDBERGH =============
+        function calculatePreditivoLindbergh() {
+            if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.municipios) {
+                return { preditivo: {}, counts: {}, quintilSize: 0 };
+            }
+
+            const municipios = Object.entries(DASHBOARD_DATA_RJ.municipios);
+
+            // Extrair valores de Lindbergh (usar votos absolutos)
+            const lindberghValues = municipios
+                .map(([name, data]) => {
+                    const lulaVotos = data.lula_votos || 0;
+                    const lindberghVotos = data.lindbergh_votos || 0;
+                    const lindberghPercent = lulaVotos > 0 ? (lindberghVotos / lulaVotos) * 100 : 0;
+                    return {
+                        name,
+                        lindbergh: lindberghPercent
+                    };
+                })
+                .sort((a, b) => b.lindbergh - a.lindbergh);
+
+            const quintilSize = Math.ceil(lindberghValues.length / 5);
+            const preditivo = {};
+
+            lindberghValues.forEach((item, index) => {
+                const quintil = Math.floor(index / quintilSize);
+                let classificacao = 'SWING';
+
+                if (quintil === 0) classificacao = 'SEGURO LINDBERGH';
+                else if (quintil === 1) classificacao = 'COMPETITIVO PRÓ-LINDBERGH';
+                else if (quintil === 2) classificacao = 'BATTLEGROUND';
+                else if (quintil === 3) classificacao = 'COMPETITIVO CONTRA';
+                else classificacao = 'DIFÍCIL';
+
+                preditivo[item.name] = { classificacao, score: item.lindbergh, quintil };
+            });
+
+            return { preditivo, quintilSize };
+        }
+
+        // ============= DADOS =============
+        function getMunicipios() {
+            if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.municipios) {
+                console.error('❌ DASHBOARD_DATA_RJ não carregado!');
+                return [];
+            }
+
+            return Object.entries(DASHBOARD_DATA_RJ.municipios).map(([name, data]) => {
+                // Dados RJ: usar votos absolutos para calcular margem
+                const lulaVotos = data.lula_votos || 0;
+                const bolsonaroVotos = data.bolsonaro_votos || 0;
+                const totalVotos = lulaVotos + bolsonaroVotos;
+
+                // Calcular margem percentual PT-Bolsonaro
+                let margem = 0;
+                if (totalVotos > 0) {
+                    const lulaPercent = (lulaVotos / totalVotos) * 100;
+                    const bolsonaroPercent = (bolsonaroVotos / totalVotos) * 100;
+                    margem = lulaPercent - bolsonaroPercent;
+                }
+
+                // Calcular índice Lindbergh (simplificado)
+                const lindberghVotos = data.lindbergh_votos || 0;
+                const lindberghPercent = totalVotos > 0 ? (lindberghVotos / totalVotos) * 100 : 0;
+                const lindberghNormalizado = (lindberghPercent / 100) - 0.015;  // Comparar com média estadual
+
+                return {
+                    name,
+                    ...data,
+                    indice_eb: lindberghNormalizado,
+                    indice_nacional: margem / 100,  // Normalizar para -1 a +1
+                    margem: margem,
+                    classificacao: 'RJ',
+                    classificacao_nacional: 'RJ',
+                    preditivo_2026: { classificacao: 'N/A', score: 0 }
+                };
+            });
+        }
+
+        function populateMunicipoSelect() {
+            const select = document.getElementById('municipioSelectIndicadores');
+            if (!select) {
+                console.warn('⚠️ #municipioSelectIndicadores não encontrado');
+                return;
+            }
+
+            const municipios = getMunicipios();
+
+            municipios.forEach(mun => {
+                const option = document.createElement('option');
+                option.value = mun.name;
+                option.textContent = mun.name;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', (e) => {
+                currentMunicipio = e.target.value;
+                if (currentMunicipio) {
+                    // Populate the indicators table for this municipality
+                    populateIndicadoresMunicipio();
+                }
+            });
+
+            // Carregar primeiro município por padrão
+            if (municipios.length > 0) {
+                select.value = municipios[0].name;
+                populateIndicadoresMunicipio();
+            }
+        }
+
+        // ============= TABELAS =============
+        function populateTables() {
+            const municipios = getMunicipios();
+
+            // Top Favoráveis
+            const favoraveis = municipios
+                .filter(m => m.indice_eb !== undefined)
+                .sort((a, b) => b.indice_eb - a.indice_eb)
+                .slice(0, 10);
+
+            const topFavBody = document.querySelector('#topFavoraveis tbody');
+            favoraveis.forEach(m => {
+                const row = topFavBody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${m.name}</strong></td>
+                    <td style="color: var(--bastiao-lindbergh);">${m.indice_eb.toFixed(3)}</td>
+                `;
+            });
+
+            // Top Difíceis
+            const dificeis = municipios
+                .filter(m => m.indice_eb !== undefined)
+                .sort((a, b) => a.indice_eb - b.indice_eb)
+                .slice(0, 10);
+
+            const topDifBody = document.querySelector('#topDificeis tbody');
+            dificeis.forEach(m => {
+                const row = topDifBody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${m.name}</strong></td>
+                    <td style="color: var(--bastiao-anti);">${m.indice_eb.toFixed(3)}</td>
+                `;
+            });
+
+            // Classificação Municipal
+            const munTable = document.querySelector('#municipiosTable tbody');
+            municipios.forEach(m => {
+                const row = munTable.insertRow();
+
+                // Usar campos reais: classificacao (federal) e preditivo_2026 (Lindbergh)
+                const clasNacional = m.classificacao || 'N/A';
+                const clasLindbergh = m.preditivo_2026?.classificacao || 'N/A';
+                const classeNacBadge = `badge-${clasNacional.toLowerCase().replace(/ /g, '-')}`;
+                const classeLindberghBadge = `badge-${clasLindbergh.toLowerCase().replace(/ /g, '-')}`;
+
+                row.innerHTML = `
+                    <td><strong>${m.name}</strong></td>
+                    <td>${(m.indice_nacional || 0).toFixed(3)}</td>
+                    <td><span class="badge ${classeNacBadge}">${clasNacional}</span></td>
+                    <td>${(m.indice_eb || 0).toFixed(3)}</td>
+                    <td><span class="badge ${classeLindberghBadge}">${clasLindbergh}</span></td>
+                    <td><span class="badge" style="background: #F39C12; color: white;">${clasLindbergh}</span></td>
+                `;
+            });
+
+            // Prioridades
+            const priorTable = document.querySelector('#prioridades tbody');
+            municipios
+                .filter(m => m.preditivo_2026.classificacao.includes('GLEISTA') || m.preditivo_2026.classificacao === 'COMPETITIVO PRÓ-LINDBERGH')
+                .sort((a, b) => b.preditivo_2026.score - a.preditivo_2026.score)
+                .forEach(m => {
+                    const row = priorTable.insertRow();
+                    row.innerHTML = `
+                        <td><strong>${m.name}</strong></td>
+                        <td>${(m.preditivo_2026.score * 100).toFixed(1)}%</td>
+                        <td><span class="badge" style="background: #F39C12; color: white;">${m.preditivo_2026.classificacao}</span></td>
+                        <td>${m.preditivo_2026.tendencia}</td>
+                    `;
+                });
+
+            // All Data
+            const allTable = document.querySelector('#allDataTable tbody');
+            municipios.forEach(m => {
+                const row = allTable.insertRow();
+                const clasNac = m.classificacao || 'N/A';
+                const clasLindbergh = m.preditivo_2026?.classificacao || 'N/A';
+                row.innerHTML = `
+                    <td><strong>${m.name}</strong></td>
+                    <td>${(m.indice_nacional || 0).toFixed(3)}</td>
+                    <td><span class="badge badge-${clasNac.toLowerCase().replace(/ /g, '-')}">${clasNac}</span></td>
+                    <td>${(m.indice_eb || 0).toFixed(3)}</td>
+                    <td><span class="badge badge-${clasLindbergh.toLowerCase().replace(/ /g, '-')}">${clasLindbergh}</span></td>
+                    <td><span class="badge" style="background: #F39C12; color: white;">${clasLindbergh}</span></td>
+                `;
+            });
+
+            // Search
+            document.getElementById('searchInput').addEventListener('keyup', (e) => {
+                const filter = e.target.value.toLowerCase();
+                const rows = allTable.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const name = row.textContent.toLowerCase();
+                    row.style.display = name.includes(filter) ? '' : 'none';
+                });
+            });
+        }
+
+        // ============= CHARTS =============
+        function initCharts() {
+            try {
+                // Scatter: IN × IL
+                const municipios = getMunicipios();
+                console.log('📊 Inicializando scatter chart com', municipios.length, 'municípios');
+
+                const scatterEl = document.getElementById('scatterChart');
+
+                if (!scatterEl) {
+                    console.warn('⚠️ Elemento scatterChart não encontrado');
+                    return;
+                }
+
+                const ctx = scatterEl.getContext('2d');
+
+                // Dividir por classificação federal (2022)
+                const bastiaoPetista = municipios.filter(m => m.classificacao === 'Bastião Petista').map(m => ({x: m.indice_nacional, y: m.indice_eb, r: 6}));
+                const bastiaoBolsonarista = municipios.filter(m => m.classificacao === 'Bastião Bolsonarista').map(m => ({x: m.indice_nacional, y: m.indice_eb, r: 6}));
+                const swing = municipios.filter(m => m.classificacao === 'Swing').map(m => ({x: m.indice_nacional, y: m.indice_eb, r: 6}));
+
+                console.log('  Bastião Petista:', bastiaoPetista.length, 'pontos');
+                console.log('  Bastião Bolsonarista:', bastiaoBolsonarista.length, 'pontos');
+                console.log('  Swing:', swing.length, 'pontos');
+
+                const data = {
+                    datasets: [
+                        {
+                            label: 'Bastião Petista',
+                            data: bastiaoPetista,
+                            backgroundColor: 'rgba(39, 174, 96, 0.6)',
+                            borderColor: 'rgba(39, 174, 96, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            tension: 0,
+                            showLine: false
+                        },
+                        {
+                            label: 'Bastião Bolsonarista',
+                            data: bastiaoBolsonarista,
+                            backgroundColor: 'rgba(231, 76, 60, 0.6)',
+                            borderColor: 'rgba(46, 134, 193, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            tension: 0,
+                            showLine: false
+                        },
+                        {
+                            label: 'Swing',
+                            data: swing,
+                            backgroundColor: 'rgba(244, 208, 63, 0.6)',
+                            borderColor: 'rgba(244, 208, 63, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            tension: 0,
+                            showLine: false
+                        }
+                    ]
+                };
+
+                const scatterChart = new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        showLine: false,
+                        elements: {
+                            line: { borderWidth: 0 },
+                            point: { radius: 6, hitRadius: 10, hoverRadius: 8 }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#E8ECF1' }
+                            },
+                            filler: { propagate: false }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                min: -1,
+                                max: 1,
+                                title: {
+                                    display: true,
+                                    text: '← Bolsonarista | Lulista →',
+                                    color: '#E8ECF1',
+                                    font: { size: 12 }
+                                },
+                                ticks: { color: '#E8ECF1' },
+                                grid: { color: '#2A3144' }
+                            },
+                            y: {
+                                type: 'linear',
+                                min: -0.5,
+                                max: 0.5,
+                                title: {
+                                    display: true,
+                                    text: '← Anti-Lindbergh | Pro-Lindbergh →',
+                                    color: '#E8ECF1',
+                                    font: { size: 12 }
+                                },
+                                ticks: { color: '#E8ECF1' },
+                                grid: { color: '#2A3144' }
+                            }
+                        }
+                    }
+                });
+
+                chartsInstances.scatter = scatterChart;
+                console.log('✅ Scatter chart inicializado com', bastiaoPetista.length + bastiaoBolsonarista.length + swing.length, 'pontos totais');
+
+                // Inicializar também o gráfico preditivo
+                initPreditivoChart();
+            } catch (error) {
+                console.error('❌ Erro ao inicializar scatter chart:', error);
+                console.error('   Stack:', error.stack);
+            }
+        }
+
+        function updateHistoricoCharts(municipio) {
+            if (!municipio) return;
+
+            // Se for ESTADO, agregar dados de todos os municípios
+            const mun = DASHBOARD_DATA_RJ.municipios[municipio];
+            if (!mun) return;
+
+            // ============= MOSTRAR INFORMAÇÕES DO MUNICÍPIO =============
+            document.getElementById('municipioInfo').style.display = 'grid';
+
+            // Usar campos reais
+            const clasNac = mun.classificacao || 'N/A';
+            const clasLindbergh = mun.preditivo_2026?.classificacao || 'N/A';
+            const indNac = mun.indice_nacional !== undefined ? mun.indice_nacional : (mun.presidencial?.['2022']?.pt_pct || 0);
+            const indLindbergh = mun.indice_eb !== undefined ? mun.indice_eb : (mun.lindbergh?.['2022'] || 0);
+
+            // Mostrar município ou estado
+            const munLabel = mun.municipio || mun.name || 'N/A';
+
+            // Elementos que podem não existir - mostrar N/A
+            document.getElementById('municClassNac').textContent = clasNac;
+            document.getElementById('municIndiceNac').textContent = `PT 2022: ${indNac.toFixed(3)}%`;
+            document.getElementById('municClassLindbergh').textContent = clasLindbergh;
+            document.getElementById('municIndiceLindbergh').textContent = `Lindbergh 2022: ${indLindbergh.toFixed(3)}%`;
+            document.getElementById('municPred26').textContent = clasLindbergh;
+            document.getElementById('municPredScore').textContent = (mun.preditivo_2026 && mun.preditivo_2026.score !== undefined) ? `Score: ${(mun.preditivo_2026.score * 100).toFixed(1)}%` : 'Score: —';
+
+            // ============= TABELA PT × DIREITA =============
+            const tabelaPres = document.getElementById('tabelaPresidencial').querySelector('tbody');
+            tabelaPres.innerHTML = '';
+
+            const presData = [];
+            const anos = [2010, 2014, 2018, 2022];
+
+            anos.forEach(ano => {
+                // Acessar presidencial (campo correto)
+                const presAno = mun.presidencial && mun.presidencial[String(ano)];
+                if (presAno) {
+                    presData.push({
+                        ano: ano,
+                        pt: presAno.pt_pct || 0,
+                        direita: presAno.oposicao_pct || 0,
+                        margem: presAno.margem || 0
+                    });
+                }
+            });
+
+            // Se não tiver dados, mostrar mensagem
+            if (presData.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1rem;">⚠️ Dados históricos em processamento (apenas 2022 disponível)</td>`;
+                tabelaPres.appendChild(tr);
+            } else {
+                // Calcular terceira via e variação
+                presData.forEach((row, idx) => {
+                    const terceiraVia = (100 - row.pt - row.direita).toFixed(1);
+                    const saldo = (row.pt - row.direita).toFixed(1);
+                    let variacao = '—';
+
+                    if (idx > 0) {
+                        const prev = (presData[idx-1].pt - presData[idx-1].direita);
+                        variacao = ((row.pt - row.direita) - prev).toFixed(1);
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${row.ano}</strong></td>
+                        <td style="color: #E74C3C;">${row.pt.toFixed(1)}%</td>
+                        <td style="color: #2E86C1;">${row.direita.toFixed(1)}%</td>
+                        <td>${terceiraVia}%</td>
+                        <td style="font-weight: 600; color: ${saldo > 0 ? '#E74C3C' : '#2E86C1'};">${saldo}</td>
+                        <td>${variacao}</td>
+                    `;
+                    tabelaPres.appendChild(tr);
+                });
+            }
+
+            // Linha preditiva 2026
+            const tr2026 = document.createElement('tr');
+            tr2026.style.borderTop = '2px solid #2A3144';
+            tr2026.style.fontWeight = '700';
+            const predClass = (mun.preditivo_2026 && mun.preditivo_2026.classificacao) ? mun.preditivo_2026.classificacao : '—';
+            const pt2026 = (mun.preditivo_2026 && mun.preditivo_2026.pt_projecao !== undefined) ? mun.preditivo_2026.pt_projecao : '—';
+            const dir2026 = (mun.preditivo_2026 && mun.preditivo_2026.direita_projecao !== undefined) ? mun.preditivo_2026.direita_projecao : '—';
+            const terceira2026 = (pt2026 !== '—' && dir2026 !== '—') ? (100 - pt2026 - dir2026).toFixed(1) : '—';
+            const saldo2026 = (pt2026 !== '—' && dir2026 !== '—') ? (pt2026 - dir2026).toFixed(1) : '—';
+            tr2026.innerHTML = `
+                <td style="background: var(--bg-primary);">2026*</td>
+                <td style="background: var(--bg-primary); color: #E74C3C;">${pt2026 !== '—' ? pt2026.toFixed(1) + '%' : '—'}</td>
+                <td style="background: var(--bg-primary); color: #2E86C1;">${dir2026 !== '—' ? dir2026.toFixed(1) + '%' : '—'}</td>
+                <td style="background: var(--bg-primary);">${terceira2026 !== '—' ? terceira2026 + '%' : '—'}</td>
+                <td style="background: var(--bg-primary); color: #F39C12; font-weight: 700;">${saldo2026 !== '—' ? (saldo2026 > 0 ? '+' : '') + saldo2026 : '—'}</td>
+                <td style="background: var(--bg-primary); color: #F39C12; font-size: 0.85rem;">${predClass}</td>
+            `;
+            tabelaPres.appendChild(tr2026);
+
+            // ============= TABELA LINDBERGH HOFFMANN =============
+            const tabelaLindbergh = document.getElementById('tabelaLindbergh').querySelector('tbody');
+            tabelaLindbergh.innerHTML = '';
+
+            const lindberghData = [];
+            const cargos = {
+                2010: 'Senadora',
+                2014: 'Governadora',
+                2018: 'Deputada Federal',
+                2022: 'Deputada Federal'
+            };
+
+            anos.forEach(ano => {
+                // Acessar % de Lindbergh para o ano
+                const lindberghPct = mun.lindbergh && mun.lindbergh[String(ano)];
+                if (lindberghPct !== undefined) {
+                    lindberghData.push({
+                        ano: ano,
+                        lindbergh_pct: lindberghPct,
+                        cargo: cargos[ano]
+                    });
+                }
+            });
+
+            // Renderizar dados de Lindbergh histórico
+            lindberghData.forEach((row) => {
+                const tr = document.createElement('tr');
+                const lindberghPct = row.lindbergh_pct || 0;
+                const lindberghColor = lindberghPct > 10 ? '#27AE60' : lindberghPct > 5 ? '#F39C12' : '#E74C3C';
+
+                tr.innerHTML = `
+                    <td><strong>${row.ano}</strong></td>
+                    <td style="color: ${lindberghColor}; font-weight: 600;">${lindberghPct.toFixed(2)}%</td>
+                    <td style="font-size: 0.75rem;">${row.cargo}</td>
+                `;
+                tabelaLindbergh.appendChild(tr);
+            });
+
+            // Linha preditiva 2026 para Lindbergh
+            const trPred2026 = document.createElement('tr');
+            trPred2026.style.borderTop = '2px solid #2A3144';
+            trPred2026.style.fontWeight = '700';
+            const pred2026 = mun.preditivo_2026 || {};
+            const pred2026Class = pred2026.classificacao ? pred2026.classificacao : '—';
+            trPred2026.innerHTML = `
+                <td style="background: var(--bg-primary);">2026*</td>
+                <td style="background: var(--bg-primary); color: var(--accent-red);">Prognóstico</td>
+                <td style="background: var(--bg-primary); color: #F39C12; font-weight: 700;">${pred2026Class}</td>
+            `;
+            tabelaLindbergh.appendChild(trPred2026);
+
+            // ============= GRÁFICOS =============
+            // Chart Presidente (2010-2022)
+            const presContext = document.getElementById('historicaPresChart').getContext('2d');
+            if (chartsInstances.historicaPres) {
+                chartsInstances.historicaPres.destroy();
+            }
+
+            const presValues = [
+                ((mun.presidencial?.['2010']?.pt_pct || 0) - (mun.presidencial?.['2010']?.oposicao_pct || 0)) || 0,
+                ((mun.presidencial?.['2014']?.pt_pct || 0) - (mun.presidencial?.['2014']?.oposicao_pct || 0)) || 0,
+                ((mun.presidencial?.['2018']?.pt_pct || 0) - (mun.presidencial?.['2018']?.oposicao_pct || 0)) || 0,
+                ((mun.presidencial?.['2022']?.pt_pct || 0) - (mun.presidencial?.['2022']?.oposicao_pct || 0)) || 0
+            ];
+
+            chartsInstances.historicaPres = new Chart(presContext, {
+                type: 'bar',
+                data: {
+                    labels: ['2010', '2014', '2018', '2022'],
+                    datasets: [{
+                        label: 'Saldo PT - Direita (%)',
+                        data: presValues,
+                        backgroundColor: presValues.map(v => v > 0 ? '#E74C3C' : '#2E86C1'),
+                        borderColor: 'transparent'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'x',
+                    plugins: {
+                        legend: { labels: { color: '#E8ECF1' } },
+                        title: { display: true, text: `${municipio} - Saldo Presidencial`, color: '#E8ECF1', font: { size: 14, weight: 'bold' } }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#E8ECF1' },
+                            grid: { color: '#2A3144' }
+                        },
+                        x: {
+                            ticks: { color: '#E8ECF1' },
+                            grid: { color: '#2A3144' }
+                        }
+                    }
+                }
+            });
+
+            // Chart Lindbergh (2010-2022)
+            const contexto = document.getElementById('historicaLindberghChart').getContext('2d');
+            if (chartsInstances.historicaEB) {
+                chartsInstances.historicaLindbergh.destroy();
+            }
+
+            const ebValues = [
+                mun.lindbergh?.['2010'] || 0,
+                mun.lindbergh?.['2014'] || 0,
+                mun.lindbergh?.['2018'] || 0,
+                mun.lindbergh?.['2022'] || 0
+            ];
+
+            chartsInstances.historicaLindbergh = new Chart(contexto, {
+                type: 'line',
+                data: {
+                    labels: ['2010', '2014', '2018', '2022'],
+                    datasets: [{
+                        label: 'Votação de Lindbergh Hoffmann (%)',
+                        data: ebValues,
+                        borderColor: '#C41E3A',
+                        backgroundColor: 'rgba(196, 30, 58, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#C41E3A'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#E8ECF1' } },
+                        title: { display: true, text: `${municipio} - Lindbergh Hoffmann`, color: '#E8ECF1', font: { size: 14, weight: 'bold' } }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { color: '#E8ECF1' },
+                            grid: { color: '#2A3144' }
+                        },
+                        x: {
+                            ticks: { color: '#E8ECF1' },
+                            grid: { color: '#2A3144' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============= MAPS =============
+        // Coordenadas dos 92 municípios do Amazonas
+        const PARANA_MUNICIPIOS_COORDS = {
+            "ALVARÃES": [-2.6811, -64.6628],
+            "AMATURÁ": [-0.8281, -67.9308],
+            "ANAMÃ": [-1.8333, -64.7333],
+            "ANORI": [-1.6436, -61.8353],
+            "APUÍ": [-7.5908, -61.5033],
+            "ATALAIA DO NORTE": [0.4786, -66.9328],
+            "AUTAZES": [-3.5828, -60.6008],
+            "BARCELOS": [0.9744, -62.9289],
+            "BARREIRINHA": [-1.8308, -59.3283],
+            "BENJAMIN CONSTANT": [-4.3799, -70.0264],
+            "BERURI": [-1.5528, -63.1167],
+            "BOA VISTA DO RAMOS": [-2.8158, -60.3497],
+            "BOCA DO ACRE": [-8.7342, -67.3911],
+            "BORBA": [-4.3922, -59.5881],
+            "CAAPIRANGA": [-4.4286, -64.6353],
+            "CANUTAMA": [-7.2667, -64.4333],
+            "CARAUARI": [-4.8856, -66.8928],
+            "CAREIRO": [-3.2481, -59.9422],
+            "CAREIRO DA VÁRZEA": [-3.3333, -60.4167],
+            "COARI": [-4.0756, -63.1356],
+            "CODAJÁS": [-3.8439, -61.9097],
+            "EIRUNEPÉ": [-6.6628, -69.8761],
+            "ENVIRA": [-7.6439, -69.8944],
+            "FONTE BOA": [-2.5156, -66.0156],
+            "GUAJARÁ": [-4.2083, -60.6667],
+            "HUMAITÁ": [-7.5039, -63.0211],
+            "IPIXUNA": [-7.7547, -61.4311],
+            "IRANDUBA": [-2.8889, -60.3167],
+            "ITACOATIARA": [-3.1303, -58.4544],
+            "ITAMARATI": [-3.1544, -65.5181],
+            "ITAPIRANGA": [-5.1567, -68.8417],
+            "JAPURÁ": [-1.3667, -66.8667],
+            "JURUÁ": [-1.7395, -65.2844],
+            "JUTAÍ": [-2.7833, -65.8],
+            "LÁBREA": [-7.2683, -64.7658],
+            "MANACAPURU": [-3.3, -60.5833],
+            "MANAQUIRI": [-3.4667, -60.3333],
+            "MANAUS": [-3.1190, -60.0217],
+            "MANICORÉ": [-5.8061, -61.2992],
+            "MARAÃ": [-0.55, -66.4],
+            "MAUÉS": [-3.3931, -57.7439],
+            "NHAMUNDÁ": [-0.5208, -58.2906],
+            "NOVA OLINDA DO NORTE": [-3.7658, -59.0331],
+            "NOVO AIRÃO": [-2.5906, -61.0253],
+            "NOVO ARIPUANÃ": [-5.1256, -60.3314],
+            "PARINTINS": [-2.6328, -56.7395],
+            "PAUINI": [-7.7167, -66.9833],
+            "PRESIDENTE FIGUEIREDO": [-1.8633, -60.8236],
+            "RIO PRETO DA EVA": [-2.5997, -59.3958],
+            "SANTA ISABEL DO RIO NEGRO": [0.3519, -65.0186],
+            "SANTO ANTÔNIO DO IÇÁ": [-3.1, -68.65],
+            "SILVES": [-2.95, -60.65],
+            "SÃO GABRIEL DA CACHOEIRA": [0.1278, -67.0892],
+            "SÃO PAULO DE OLIVENÇA": [-3.3833, -69.95],
+            "SÃO SEBASTIÃO DO UATUMÃ": [-1.0169, -59.2853],
+            "TABATINGA": [-4.2531, -69.9475],
+            "TAPAUÁ": [-4.0167, -66.2],
+            "TEFÉ": [-3.3631, -64.7136],
+            "TONANTINS": [-1.8333, -67.8],
+            "UARINI": [0.6667, -62.7667],
+            "URUCARÁ": [-1.9972, -59.3247],
+            "URUCURITUBA": [-3.0631, -59.7958],
+        };
+
+        function initMaps() {
+            if (mapInstance) return;
+
+            // Verificar se coordenadas estão carregadas ANTES de criar o mapa
+            if (!window.MUNICIPIOS_COORDS || Object.keys(window.MUNICIPIOS_COORDS).length === 0) {
+                console.warn('⚠️ MUNICIPIOS_COORDS ainda não carregado. Aguardando...');
+                setTimeout(() => initMaps(), 500);
+                return;
+            }
+
+            console.log('✅ MUNICIPIOS_COORDS disponível, iniciando mapa com', Object.keys(window.MUNICIPIOS_COORDS).length, 'coordenadas');
+
+            // Criar o mapa DEPOIS de confirmar que coords foram carregadas
+            mapInstance = L.map('map').setView([-25.5, -51.5], 7);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mapInstance);
+
+            // Add markers com coordenadas reais
+            const municipios = getMunicipios();
+
+            let marcadoresCount = 0;
+            let semCoordsCount = 0;
+
+            municipios.forEach(m => {
+                const coords = window.MUNICIPIOS_COORDS[m.name];
+                if (!coords) {
+                    semCoordsCount++;
+                    if (semCoordsCount <= 5) {
+                        console.warn(`⚠️ Sem coordenadas para: ${m.name}`);
+                    }
+                    return;
+                }
+
+                marcadoresCount++;
+
+                // Determinar cor baseada na classificação preditiva 2026
+                let color = '#888888'; // Cinza padrão
+                let label = m.preditivo_2026?.classificacao || 'N/A';
+
+                if (m.preditivo_2026?.classificacao === 'SEGURO LINDBERGH') {
+                    color = '#27AE60'; // Verde - SEGURO
+                } else if (m.preditivo_2026?.classificacao === 'COMPETITIVO PRÓ-LINDBERGH') {
+                    color = '#F39C12'; // Laranja - COMPETITIVO PRÓ
+                } else if (m.preditivo_2026?.classificacao === 'BATTLEGROUND') {
+                    color = '#E67E22'; // Laranja escuro - BATTLEGROUND
+                } else if (m.preditivo_2026?.classificacao === 'COMPETITIVO CONTRA') {
+                    color = '#E74C3C'; // Vermelho - COMPETITIVO CONTRA
+                } else if (m.preditivo_2026?.classificacao === 'DIFÍCIL') {
+                    color = '#95A5A6'; // Cinza - DIFÍCIL
+                }
+
+                const marker = L.circleMarker(coords, {
+                    radius: 6,
+                    fillColor: color,
+                    color: color,
+                    weight: 2,
+                    opacity: 0.9,
+                    fillOpacity: 0.7
+                }).addTo(mapInstance);
+
+                // Popup com informações de Lindbergh
+                const lindberghPct = (m.lindbergh?.['2022'] || 0).toFixed(2);
+                const ptPct = (m.indice_nacional || 0).toFixed(2);
+                const margem = (m.margem || 0).toFixed(2);
+
+                marker.bindPopup(`
+                    <div style="font-size: 0.85rem; width: 180px;">
+                        <strong style="color: ${color};">${m.name}</strong><br>
+                        <small><strong>Lindbergh 2026:</strong> ${label}</small><br>
+                        <small>Lindbergh 2022: ${lindberghPct}%</small><br>
+                        <small>PT 2022: ${ptPct}%</small><br>
+                        <small>Margem PT-Bolso: ${margem}pp</small>
+                    </div>
+                `);
+            });
+
+            console.log(`✅ Mapa do Rio de Janeiro inicializado: ${marcadoresCount} marcadores plotados, ${semCoordsCount} sem coordenadas`);
+        }
+
+        function initMapSecoes() {
+            if (mapSecoesInstance) return;
+
+            // Coordenadas corretas para Rio de Janeiro
+            mapSecoesInstance = L.map('map-secoes').setView([-25.5, -51.5], 7);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(mapSecoesInstance);
+
+            // Verificar se SECOES_2022_RJ foi carregado
+            if (typeof SECOES_2022_RJ === 'undefined' || !SECOES_2022_RJ) {
+                console.warn('⚠️ SECOES_2022_RJ ainda não carregado. Aguardando...');
+                setTimeout(() => initMapSecoes(), 500);
+                return;
+            }
+
+            // Populara seletor de município
+            populateMunicipoImpulsionamento();
+
+            // Plotar todas as seções inicialmente
+            plotarSecoes();
+
+            console.log('✅ Mapa de Seções do Rio de Janeiro inicializado');
+        }
+
+        // ============= PREDITIVO =============
+        function initPreditivoChart() {
+            const municipios = getMunicipios();
+            const classficacoes = {};
+
+            municipios.forEach(m => {
+                const cls = m.preditivo_2026.classificacao;
+                classficacoes[cls] = (classficacoes[cls] || 0) + 1;
+            });
+
+            // ===== CALCULAR RESUMO DE CENÁRIOS =====
+            // 1. Municípios Competitivos
+            const competitivos = (classficacoes['BATTLEGROUND'] || 0) +
+                                (classficacoes['COMPETITIVO PRÓ-LINDBERGH'] || 0) +
+                                (classficacoes['COMPETITIVO CONTRA'] || 0);
+            document.getElementById('municipiosCompetitivos').textContent = competitivos;
+
+            // 2. Tendência Geral
+            let tendenciasPositivas = 0;
+            let tendenciasNegativas = 0;
+            municipios.forEach(m => {
+                if (m.preditivo_2026.tendencia === 'positiva') {
+                    tendenciasPositivas++;
+                } else if (m.preditivo_2026.tendencia === 'negativa') {
+                    tendenciasNegativas++;
+                }
+            });
+
+            const tendenciaGeral = tendenciasPositivas - tendenciasNegativas;
+            const tendenciaElement = document.getElementById('tendenciaGeral');
+            const tendenciaLabel = document.getElementById('tendenciaLabel');
+
+            if (tendenciaGeral > 0) {
+                tendenciaElement.textContent = '+' + tendenciaGeral;
+                tendenciaElement.style.color = '#27AE60';
+                tendenciaLabel.textContent = '📈 Positiva para Lindbergh';
+                tendenciaLabel.style.color = '#27AE60';
+            } else if (tendenciaGeral < 0) {
+                tendenciaElement.textContent = tendenciaGeral;
+                tendenciaElement.style.color = '#E74C3C';
+                tendenciaLabel.textContent = '📉 Negativa para Lindbergh';
+                tendenciaLabel.style.color = '#E74C3C';
+            } else {
+                tendenciaElement.textContent = '0';
+                tendenciaElement.style.color = '#F39C12';
+                tendenciaLabel.textContent = '➡️ Neutro';
+                tendenciaLabel.style.color = '#F39C12';
+            }
+
+            // 3. Margem Esperada 2026
+            const estado = DASHBOARD_DATA_RJ.estado;
+            if (estado && estado.preditivo_2026) {
+                const ptProj = estado.preditivo_2026.pt_projecao || 0;
+                const dirProj = estado.preditivo_2026.direita_projecao || 0;
+                const margem = ptProj - dirProj;
+
+                const margemElement = document.getElementById('margemEsperada');
+                if (margem > 0) {
+                    margemElement.textContent = '+' + margem.toFixed(1) + '%';
+                    margemElement.style.color = '#E74C3C';
+                } else {
+                    margemElement.textContent = margem.toFixed(1) + '%';
+                    margemElement.style.color = '#2E86C1';
+                }
+            }
+
+            const ctx = document.getElementById('preditivoChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(classficacoes),
+                    datasets: [{
+                        data: Object.values(classficacoes),
+                        backgroundColor: ['#27AE60', '#F39C12', '#E67E22', '#E74C3C', '#95A5A6', '#3498DB']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#FFFFFF', font: { size: 12 } } }
+                    }
+                }
+            });
+
+            chartsInstances.preditivo = true;
+        }
+
+        // ============= IMPULSIONAMENTO - SEÇÕES =============
+        let secoesMarcadores = [];
+        let municipioFiltroAtual = null;
+
+        function populateMunicipoImpulsionamento() {
+            const select = document.getElementById('municipioImpulsionamentoSelect');
+
+            if (!SECOES_2022_RJ) {
+                console.error('❌ SECOES_2022_RJ não carregado');
+                setTimeout(populateMunicipoImpulsionamento, 500); // Tentar novamente
+                return;
+            }
+
+            console.log('✅ Populando seletor com', Object.keys(SECOES_2022_RJ).length, 'municípios');
+            const municipios = Object.keys(SECOES_2022_RJ).sort();
+
+            municipios.forEach(mun => {
+                const option = document.createElement('option');
+                option.value = mun;
+                const count = SECOES_2022_RJ[mun].length;
+                option.textContent = `${mun} (${count} seções)`;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', (e) => {
+                municipioFiltroAtual = e.target.value || null;
+                plotarSecoes();
+
+                // Zoom ao município se selecionado
+                if (municipioFiltroAtual && SECOES_2022_RJ[municipioFiltroAtual]) {
+                    const secoes = SECOES_2022_RJ[municipioFiltroAtual];
+                    if (secoes.length > 0) {
+                        // Calcular centroide
+                        let lat_sum = 0, lon_sum = 0;
+                        secoes.forEach(s => {
+                            lat_sum += s.latitude;
+                            lon_sum += s.longitude;
+                        });
+                        const lat_media = lat_sum / secoes.length;
+                        const lon_media = lon_sum / secoes.length;
+
+                        // Zoom ao município
+                        mapSecoesInstance.setView([lat_media, lon_media], 11);
+                    }
+                }
+            });
+        }
+
+        function plotarSecoes() {
+            // Remover marcadores antigos
+            secoesMarcadores.forEach(marker => mapSecoesInstance.removeLayer(marker));
+            secoesMarcadores = [];
+
+            if (!SECOES_2022_RJ) return;
+
+            // Selecionar seções a plotar
+            let secoes_a_plotar = [];
+
+            if (municipioFiltroAtual) {
+                secoes_a_plotar = SECOES_2022_RJ[municipioFiltroAtual] || [];
+            } else {
+                // Todas as seções
+                for (let municipio in SECOES_2022_RJ) {
+                    secoes_a_plotar = secoes_a_plotar.concat(SECOES_2022_RJ[municipio]);
+                }
+            }
+
+            // Plotar cada seção
+            secoes_a_plotar.forEach(secao => {
+                // Validar coordenadas
+                if (!secao.latitude || !secao.longitude || isNaN(secao.latitude) || isNaN(secao.longitude)) {
+                    console.warn(`⚠️ Seção ${secao.numero_secao} sem coordenadas válidas`);
+                    return;
+                }
+
+                // Definir cor baseada na classificação
+                let color = '#888888'; // Cinza padrão
+                let classificacao = secao.classificacao_secao || 'swing';
+
+                if (classificacao === 'seguro_lindbergh') {
+                    color = '#27AE60'; // Verde - Seguro Lindbergh
+                } else if (classificacao === 'competitivo_pro') {
+                    color = '#F39C12'; // Laranja - Competitivo Pró
+                } else if (classificacao === 'swing') {
+                    color = '#F4D03F'; // Amarelo - Swing
+                } else if (classificacao === 'competitivo_contra') {
+                    color = '#E59866'; // Laranja escuro - Competitivo Contra
+                } else if (classificacao === 'dificil') {
+                    color = '#E74C3C'; // Vermelho - DIFÍCIL (Bolsonarista)
+                }
+
+                const marker = L.circleMarker([secao.latitude, secao.longitude], {
+                    radius: municipioFiltroAtual ? 8 : 4,
+                    fillColor: color,
+                    color: color,
+                    weight: 2,
+                    opacity: 0.9,
+                    fillOpacity: 0.8
+                }).addTo(mapSecoesInstance);
+
+                // Popup com informações
+                const scoreText = secao.preditivo_2026?.score
+                    ? `<br><small style="color: #888;">Score: ${(secao.preditivo_2026.score * 100).toFixed(0)}%</small>`
+                    : '';
+
+                const popup = `
+                    <div style="font-size: 0.9rem; font-weight: 600;">
+                        <strong>Seção ${secao.numero_secao}</strong><br>
+                        <small>${secao.municipio}</small><br><br>
+                        <small style="color: #888;">📍 ${secao.endereco}</small><br>
+                        <small style="color: #888;">📊 ${secao.categoria}</small>${scoreText}
+                    </div>
+                `;
+
+                marker.bindPopup(popup);
+
+                // Hover - mostrar tooltip
+                marker.on('mouseover', function() {
+                    this.openPopup();
+                });
+                marker.on('mouseout', function() {
+                    this.closePopup();
+                });
+
+                secoesMarcadores.push(marker);
+            });
+
+            console.log(`✅ Plotadas ${secoes_a_plotar.length} seções`);
+        }
+
+        function downloadSecoesCsv() {
+            console.log('🔍 downloadSecoesCsv() chamado');
+
+            if (!SECOES_2022_RJ) {
+                alert('⚠️ Dados das seções ainda não foram carregados. Por favor, aguarde alguns segundos e tente novamente.');
+                console.error('❌ SECOES_2022_RJ não carregado');
+                return;
+            }
+
+            console.log('✅ SECOES_2022_RJ carregado, gerando CSV...');
+
+            let csv = 'numero_secao,municipio,endereco,latitude,longitude,lindbergh_2022_pct,classificacao_secao,trajetoria,volatilidade,raio_km\n';
+
+            const secoes_para_baixar = municipioFiltroAtual
+                ? (SECOES_2022_RJ[municipioFiltroAtual] || [])
+                : Object.values(SECOES_2022_RJ).flat();
+
+            console.log(`📊 Total de seções para baixar: ${secoes_para_baixar.length}`);
+
+            let linhas_geradas = 0;
+            secoes_para_baixar.forEach(secao => {
+                if (!secao) return;
+
+                const lindberghPct = secao.votos_lindbergh?.['2022_pct'] || 0;
+                const classificacao = secao.classificacao_secao || 'N/A';
+
+                const linha = [
+                    secao.numero_secao,
+                    secao.municipio,
+                    `"${(secao.endereco || '').replace(/"/g, '""')}"`,
+                    secao.latitude || '',
+                    secao.longitude || '',
+                    lindberghPct.toFixed(2),
+                    classificacao,
+                    secao.trajetoria || '',
+                    (secao.volatilidade || 0).toFixed(3),
+                    secao.raio_km || ''
+                ].join(',');
+                csv += linha + '\n';
+                linhas_geradas++;
+            });
+
+            console.log(`✏️ Linhas geradas: ${linhas_geradas}`);
+
+            // Download
+            try {
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+
+                const municipio_suffix = municipioFiltroAtual ? `_${municipioFiltroAtual}` : '_todos_municipios';
+                link.setAttribute('href', url);
+                link.setAttribute('download', `secoes_2022${municipio_suffix}.csv`);
+                link.style.visibility = 'hidden';
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                console.log(`✅ Download iniciado: ${linhas_geradas} seções`);
+            } catch (err) {
+                console.error('❌ Erro ao fazer download:', err);
+                alert('❌ Erro ao gerar o arquivo CSV. Verifique o console para mais detalhes.');
+            }
+        }
+
+        // Botão de download
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnDownload = document.getElementById('downloadSecoesCsv');
+            if (btnDownload) {
+                btnDownload.addEventListener('click', downloadSecoesCsv);
+            }
+        });
+
+        // ============= INDICADORES POR MUNICÍPIO =============
+        function populateIndicadoresMunicipio() {
+            if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.municipios) {
+                console.error('❌ DASHBOARD_DATA_RJ não carregado');
+                return;
+            }
+
+            const selectMun = document.getElementById('municipioSelectIndicadores');
+            const tbody = document.getElementById('indicadoresTableBody');
+            const wrapper = document.getElementById('indicadoresTableWrapper');
+            const emptyState = document.getElementById('indicadoresEmptyState');
+            const downloadBtn = document.getElementById('downloadCSVIndicadores');
+
+            if (!selectMun || !tbody) {
+                console.error('❌ Elementos da tabela não encontrados');
+                return;
+            }
+
+            console.log('📊 Carregando municípios para indicadores...');
+
+            // Preencher dropdown de municípios
+            const municipios = Object.keys(DASHBOARD_DATA_RJ.municipios).sort();
+            municipios.forEach(mun => {
+                const option = document.createElement('option');
+                option.value = mun;
+                option.textContent = mun;
+                selectMun.appendChild(option);
+            });
+
+            console.log(`✅ ${municipios.length} municípios carregados no dropdown`);
+
+            // Listener para seleção de município
+            selectMun.addEventListener('change', (e) => {
+                const municipioSelecionado = e.target.value;
+
+                if (!municipioSelecionado) {
+                    wrapper.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    downloadBtn.style.display = 'none';
+                    tbody.innerHTML = '';
+                    return;
+                }
+
+                const locaisMun = DASHBOARD_DATA_RJ.municipios[municipioSelecionado].locais_votacao;
+                if (!locaisMun || locaisMun.length === 0) {
+                    wrapper.style.display = 'none';
+                    emptyState.innerHTML = '❌ Nenhum local de votação encontrado para este município';
+                    emptyState.style.display = 'block';
+                    downloadBtn.style.display = 'none';
+                    return;
+                }
+
+                // Ordena por volume eleitoral descendente
+                const locaisOrdenados = [...locaisMun].sort((a, b) => (b.volume_eleitoral || 0) - (a.volume_eleitoral || 0));
+
+                // Renderizar tabela
+                tbody.innerHTML = '';
+                let totalVolume = 0;
+
+                locaisOrdenados.forEach(local => {
+                    const aquario = local.tamanho_aquario_pct || 0;
+                    const volume = local.volume_eleitoral || 0;
+                    const exploracao = local.indice_exploracao || 0;
+                    totalVolume += volume;
+
+                    // Classificações
+                    let aquarioLabel = '?';
+                    let aquarioColor = '#888';
+                    if (aquario > 45.9) { aquarioLabel = '🟢'; aquarioColor = '#27AE60'; }
+                    else if (aquario > 42.8) { aquarioLabel = '🔵'; aquarioColor = '#5DADE2'; }
+                    else if (aquario > 37) { aquarioLabel = '🟡'; aquarioColor = '#F4D03F'; }
+                    else { aquarioLabel = '🔴'; aquarioColor = '#E74C3C'; }
+
+                    const p33 = DASHBOARD_DATA_RJ.metadata?.limites_classificacao?.volume?.p33 || 122533;
+                    const p66 = DASHBOARD_DATA_RJ.metadata?.limites_classificacao?.volume?.p66 || 716834;
+                    let volumeLabel = '📉';
+                    if (volume >= p66) volumeLabel = '📈';
+                    else if (volume >= p33) volumeLabel = '📊';
+
+                    // Classificação quartil-based: distribuição 25% cada
+                    let exploracaoLabel = '🔴 Pouco explorado';
+                    let exploracaoColor = '#E74C3C';
+                    if (exploracao >= 1.0203) {
+                        exploracaoLabel = '🔥 Hiperexplorado';
+                        exploracaoColor = '#E74C3C';
+                    }
+                    else if (exploracao >= 0.9958) {
+                        exploracaoLabel = '🟠 Explorado';
+                        exploracaoColor = '#E59866';
+                    }
+                    else if (exploracao >= 0.9529) {
+                        exploracaoLabel = '🟡 Moderado';
+                        exploracaoColor = '#F4D03F';
+                    }
+
+                    const lat = (local.latitude || 0).toFixed(4);
+                    const lon = (local.longitude || 0).toFixed(4);
+
+                    // Classificação Consistência Histórica
+                    const consistencia = local.consistencia_historica || 5.0;
+                    let consistenciaLabel = '⚖️';
+                    let consistenciaColor = '#F4D03F';
+                    if (consistencia >= 8) { consistenciaLabel = '🏔️ Muito Estável'; consistenciaColor = '#27AE60'; }
+                    else if (consistencia >= 6) { consistenciaLabel = '⚖️ Estável'; consistenciaColor = '#82E0AA'; }
+                    else if (consistencia >= 4) { consistenciaLabel = '🌊 Instável'; consistenciaColor = '#F4D03F'; }
+                    else { consistenciaLabel = '🌀 Muito Instável'; consistenciaColor = '#E74C3C'; }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="padding: 0.75rem; border-bottom: 1px solid #2A3144;">
+                            <strong>${local.local_nome}</strong>
+                        </td>
+                        <td style="padding: 0.75rem; border-bottom: 1px solid #2A3144; font-size: 0.85rem; color: var(--text-secondary);">
+                            ${local.local_endereco}
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            <span style="color: ${aquarioColor}; font-weight: 600;">${aquarioLabel}</span><br>
+                            <small>${aquario.toFixed(1)}%</small>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            ${volumeLabel}<br>
+                            <small>${(volume/1000).toFixed(1)}k</small>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            <span style="color: ${exploracaoColor};">${exploracaoLabel}</span><br>
+                            <small>${exploracao.toFixed(2)}x</small>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            <span style="color: ${consistenciaColor};">${consistenciaLabel}</span><br>
+                            <small>${consistencia.toFixed(1)}/10</small>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144; font-size: 0.8rem;">
+                            ${lat}<br>${lon}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Mostrar tabela e esconder empty state
+                wrapper.style.display = 'block';
+                emptyState.style.display = 'none';
+                downloadBtn.style.display = 'inline-block';
+
+                // Atualizar info
+                document.getElementById('indicadoresLocaisCount').textContent = locaisOrdenados.length;
+                document.getElementById('indicadoresMunicipioInfo').textContent = `Total: ${(totalVolume/1000).toFixed(0)}k votos Lula`;
+
+                console.log(`✅ Tabela renderizada com ${locaisOrdenados.length} locais`);
+            });
+
+            // Download CSV
+            downloadBtn.addEventListener('click', () => {
+                const municipioSelecionado = selectMun.value;
+                if (!municipioSelecionado) return;
+
+                const locaisMun = DASHBOARD_DATA_RJ.municipios[municipioSelecionado].locais_votacao;
+
+                // Criar CSV
+                let csv = 'Nome do Local,Endereço,Latitude,Longitude,Aquário %,Volume (votos Lula),Índice Exploração,Seções\n';
+
+                locaisMun.forEach(local => {
+                    const nome = `"${local.local_nome.replace(/"/g, '""')}"`;
+                    const endereco = `"${local.local_endereco.replace(/"/g, '""')}"`;
+                    const lat = local.latitude || '';
+                    const lon = local.longitude || '';
+                    const aquario = (local.tamanho_aquario_pct || 0).toFixed(2);
+                    const volume = (local.volume_eleitoral || 0).toFixed(0);
+                    const exploracao = (local.indice_exploracao || 0).toFixed(4);
+                    const secoes = local.secoes?.length || 0;
+
+                    csv += `${nome},${endereco},${lat},${lon},${aquario},${volume},${exploracao},${secoes}\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `indicadores_${municipioSelecionado.replace(/\s+/g, '_')}.csv`);
+                link.style.visibility = 'hidden';
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                console.log(`✅ CSV baixado: indicadores_${municipioSelecionado}.csv`);
+            });
+        }
+
+        // Chamar função quando dados estiverem prontos
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (document.getElementById('municipioSelectIndicadores')) {
+                    populateIndicadoresMunicipio();
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
