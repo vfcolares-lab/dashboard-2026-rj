@@ -2614,9 +2614,10 @@
                     const consistencia = local.consistencia_historica || 5.0;
                     let consistenciaLabel = '⚖️';
                     let consistenciaColor = '#F4D03F';
-                    if (consistencia >= 8) { consistenciaLabel = '🏔️ Muito Estável'; consistenciaColor = '#27AE60'; }
-                    else if (consistencia >= 6) { consistenciaLabel = '⚖️ Estável'; consistenciaColor = '#82E0AA'; }
-                    else if (consistencia >= 4) { consistenciaLabel = '🌊 Instável'; consistenciaColor = '#F4D03F'; }
+                    if (consistencia >= 8.50) { consistenciaLabel = '🏔️ Muito Estável'; consistenciaColor = '#27AE60'; }
+                    else if (consistencia >= 7.50) { consistenciaLabel = '⚖️ Estável'; consistenciaColor = '#82E0AA'; }
+                    else if (consistencia >= 6.00) { consistenciaLabel = '🌊 Instável'; consistenciaColor = '#F4D03F'; }
+                    else { consistenciaLabel = '🌀 Muito Instável'; consistenciaColor = '#E74C3C'; }
                     else { consistenciaLabel = '🌀 Muito Instável'; consistenciaColor = '#E74C3C'; }
 
                     const row = document.createElement('tr');
