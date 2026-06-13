@@ -1,0 +1,34 @@
+[build]
+  command = "echo 'Static site - no build needed'"
+  publish = "."
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  NODE_ENV = "production"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/data-rj.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+    Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+  for = "/secoes_2022_rj.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+    Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+    Content-Type = "application/json"
