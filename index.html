@@ -835,7 +835,21 @@
     </div>
 
     <!-- DATA -->
-    <script src="/data-rj.js"></script>
+    <script>
+        // Load data-rj.js dynamically
+        fetch('/api/serve-data')
+            .then(r => r.text())
+            .then(data => {
+                eval(data);
+                console.log('✅ DASHBOARD_DATA_RJ carregado via API');
+            })
+            .catch(err => {
+                console.warn('⚠️ Erro ao carregar dados via API, tentando arquivo estático...');
+                const script = document.createElement('script');
+                script.src = '/data-rj.js';
+                document.head.appendChild(script);
+            });
+    </script>
     <script src="/secoes_2022_rj.js"></script>
     <script>
         // Carregar coords_rj.json dinamicamente
