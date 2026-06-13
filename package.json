@@ -1,0 +1,16 @@
+{
+  "name": "dashboard-2026-rj",
+  "version": "1.0.0",
+  "description": "Dashboard Eleitoral Rio de Janeiro 2026 - Lindbergh Farias",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server-local.js"
+  },
+  "keywords": ["eleições", "rio de janeiro", "lindbergh"],
+  "author": "Vitor Colares",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  }
+}
