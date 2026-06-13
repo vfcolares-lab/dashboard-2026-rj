@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server-local.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "data-rj.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "secoes_2022_rj.js",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server-local.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
