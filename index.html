@@ -588,8 +588,8 @@
                                 <thead style="background-color: #1A1F2E; border-bottom: 2px solid #2A3144;">
                                     <tr>
                                         <th style="text-align: left; padding: 0.75rem; color: #5DADE2;">📍 Local</th>
-                                        <th style="text-align: left; padding: 0.75rem; color: #E59866;">📊 Volume</th>
-                                        <th style="text-align: left; padding: 0.75rem; color: #5DADE2;">🌊 Aquário</th>
+                                        <th style="text-align: left; padding: 0.75rem; color: #E59866; cursor: pointer; user-select: none; transition: opacity 0.2s;" onclick="sortOportunidades('volume')" title="Clique para ordenar">📊 Volume <span id="sort-volume"></span></th>
+                                        <th style="text-align: left; padding: 0.75rem; color: #5DADE2; cursor: pointer; user-select: none; transition: opacity 0.2s;" onclick="sortOportunidades('aquario')" title="Clique para ordenar">🌊 Aquário <span id="sort-aquario"></span></th>
                                         <th style="text-align: left; padding: 0.75rem; color: #27AE60;">🏘️ Município</th>
                                     </tr>
                                 </thead>
@@ -1252,12 +1252,64 @@
 
             // Armazenar oportunidades para download
             window.oportunidadesParaDownload = oportunidades;
+            window.avgVolumeOportunidades = avgVolume;
 
             // Adicionar listener ao botão de download
             const btnDownload = document.getElementById('btnDownloadOportunidades');
             if (btnDownload) {
                 btnDownload.onclick = downloadOportunidadesCSV;
             }
+
+            // Inicializar estado de ordenação
+            window.sortOportunidadesState = { field: 'aquario', direction: 'desc' };
+        }
+
+        function sortOportunidades(field) {
+            if (!window.oportunidadesParaDownload) return;
+
+            const state = window.sortOportunidadesState;
+            const isAscending = state.field === field && state.direction === 'desc';
+            state.field = field;
+            state.direction = isAscending ? 'asc' : 'desc';
+
+            // Copiar array e ordenar
+            let oportunidades = [...window.oportunidadesParaDownload].filter(local =>
+                local.volume_eleitoral < window.avgVolumeOportunidades &&
+                local.tamanho_aquario_pct > 44
+            );
+
+            oportunidades.sort((a, b) => {
+                let valA, valB;
+                if (field === 'volume') {
+                    valA = a.volume_eleitoral;
+                    valB = b.volume_eleitoral;
+                } else {
+                    valA = a.tamanho_aquario_pct;
+                    valB = b.tamanho_aquario_pct;
+                }
+                return state.direction === 'desc' ? valB - valA : valA - valB;
+            });
+
+            // Atualizar UI
+            const tbody = document.getElementById('tbodyOportunidades');
+            tbody.innerHTML = '';
+
+            const top15 = oportunidades.slice(0, 15);
+            top15.forEach(local => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #2A3144';
+                row.innerHTML = `
+                    <td style="padding: 0.75rem; color: var(--text-secondary);">${local.local_nome || 'N/A'}</td>
+                    <td style="padding: 0.75rem; color: #E59866; font-weight: 500;">${local.volume_eleitoral || 0} votos</td>
+                    <td style="padding: 0.75rem; color: #5DADE2; font-weight: 500;">${local.tamanho_aquario_pct?.toFixed(1) || 'N/A'}%</td>
+                    <td style="padding: 0.75rem; color: #27AE60;">${local.municipio || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Atualizar indicadores de ordenação
+            document.getElementById('sort-volume').textContent = field === 'volume' ? (state.direction === 'desc' ? '↓' : '↑') : '';
+            document.getElementById('sort-aquario').textContent = field === 'aquario' ? (state.direction === 'desc' ? '↓' : '↑') : '';
         }
 
         function downloadOportunidadesCSV() {
