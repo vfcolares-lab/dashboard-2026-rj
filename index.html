@@ -902,14 +902,14 @@
     <script src="data-rj.js"></script>
     <script src="secoes_2022_rj.js"></script>
     <script>
-        // Carregar dados dos bairros do Rio
-        fetch('rio_bairros_data.json')
+        // Carregar dados dos 160 bairros do Rio
+        fetch('rio_bairros_data_165.json')
             .then(r => r.json())
             .then(data => {
                 window.RIO_BAIRROS_DATA = data;
-                console.log('✅ rio_bairros_data.json carregado');
+                console.log(`✅ ${data.length} bairros carregados`);
             })
-            .catch(err => console.error('❌ Erro ao carregar rio_bairros_data.json:', err));
+            .catch(err => console.error('❌ Erro ao carregar rio_bairros_data_165.json:', err));
     </script>
     <script>
         // Carregar coords_rj.json dinamicamente
