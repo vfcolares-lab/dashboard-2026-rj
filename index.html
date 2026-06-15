@@ -842,30 +842,55 @@
 
                 <!-- RIO BAIRROS -->
                 <section id="rio" class="section">
-                    <h2 style="margin-bottom: 1.5rem;">🏘️ Rio de Janeiro — Análise por Bairro</h2>
+                    <h2 style="margin-bottom: 1.5rem;">🏘️ Rio de Janeiro — Locais por Bairro</h2>
 
                     <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
                         <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
-                            Análise detalhada dos 19 bairros principais do Rio de Janeiro com os 5 indicadores estratégicos.
+                            Selecione uma região e bairro para ver todos os locais de votação com os 5 indicadores estratégicos.
                         </p>
                     </div>
 
-                    <div class="table-wrapper">
-                        <table id="rioBairrosTable" style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+                    <!-- Dropdowns -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">📍 Região (AP)</label>
+                            <select id="rioRegiao" style="padding: 0.75rem; width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid #2A3144; border-radius: 4px; font-weight: 600;">
+                                <option value="">— Selecione uma região —</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">🏘️ Bairro</label>
+                            <select id="rioBairro" style="padding: 0.75rem; width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid #2A3144; border-radius: 4px; font-weight: 600;">
+                                <option value="">— Selecione um bairro —</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de locais -->
+                    <div class="table-wrapper" id="rioLocaisWrapper" style="display: none;">
+                        <div style="margin-bottom: 1rem;">
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                                📍 Mostrando <span id="rioLocaisCount">0</span> locais de votação • <span id="rioBairroInfo"></span>
+                            </p>
+                        </div>
+                        <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
                             <thead style="background-color: #1A1F2E; border-bottom: 2px solid #2A3144;">
                                 <tr>
-                                    <th style="text-align: left; padding: 0.75rem; color: #5DADE2;">🏘️ Bairro</th>
-                                    <th style="text-align: center; padding: 0.75rem; color: #F39C12;">📍 Locais</th>
+                                    <th style="text-align: left; padding: 0.75rem; color: #5DADE2;">📍 Local de Votação</th>
                                     <th style="text-align: center; padding: 0.75rem; color: #E59866;">🗳️ Votos Lula</th>
-                                    <th style="text-align: center; padding: 0.75rem; color: #5DADE2;">🌊 Aquário %</th>
+                                    <th style="text-align: center; padding: 0.75rem; color: #5DADE2;">🌊 Aquário</th>
                                     <th style="text-align: center; padding: 0.75rem; color: #82E0AA;">🎯 Exploração</th>
-                                    <th style="text-align: center; padding: 0.75rem; color: #D7BEE8;">🏛️ Esquerda %</th>
+                                    <th style="text-align: center; padding: 0.75rem; color: #D7BEE8;">🏛️ Esquerda</th>
                                     <th style="text-align: center; padding: 0.75rem; color: #D4A574;">📈 Consistência</th>
                                 </tr>
                             </thead>
-                            <tbody id="rioBairrosBody">
+                            <tbody id="rioLocaisBody">
                             </tbody>
                         </table>
+                    </div>
+
+                    <div id="rioEmptyState" style="margin-top: 2rem; padding: 2rem; text-align: center; color: var(--text-secondary); background: var(--bg-card); border-radius: 8px;">
+                        Selecione uma região e um bairro para ver os locais de votação
                     </div>
                 </section>
 
@@ -902,14 +927,15 @@
     <script src="data-rj.js"></script>
     <script src="secoes_2022_rj.js"></script>
     <script>
-        // Carregar dados dos 160 bairros do Rio
-        fetch('rio_bairros_data_165.json')
+        // Carregar dados de regiões e bairros
+        fetch('rio_regioes_bairros.json')
             .then(r => r.json())
             .then(data => {
-                window.RIO_BAIRROS_DATA = data;
-                console.log(`✅ ${data.length} bairros carregados`);
+                window.RIO_REGIOES_BAIRROS = data;
+                console.log('✅ rio_regioes_bairros.json carregado');
+                renderRioSelectors();
             })
-            .catch(err => console.error('❌ Erro ao carregar rio_bairros_data_165.json:', err));
+            .catch(err => console.error('❌ Erro ao carregar rio_regioes_bairros.json:', err));
     </script>
     <script>
         // Carregar coords_rj.json dinamicamente
@@ -2918,6 +2944,116 @@
         }
 
         // ============= RIO BAIRROS =============
+        function renderRioSelectors() {
+            if (!window.RIO_REGIOES_BAIRROS) return;
+
+            const regioSelect = document.getElementById('rioRegiao');
+            const bairroSelect = document.getElementById('rioBairro');
+
+            // Popular dropdown de regiões
+            Object.keys(window.RIO_REGIOES_BAIRROS).sort().forEach(regiao => {
+                const option = document.createElement('option');
+                option.value = regiao;
+                option.textContent = regiao;
+                regioSelect.appendChild(option);
+            });
+
+            // Listener para mudança de região
+            regioSelect.addEventListener('change', (e) => {
+                const regiao = e.target.value;
+                bairroSelect.innerHTML = '<option value="">— Selecione um bairro —</option>';
+
+                if (!regiao) return;
+
+                const bairros = Object.keys(window.RIO_REGIOES_BAIRROS[regiao]['bairros'])
+                    .filter(b => window.RIO_REGIOES_BAIRROS[regiao]['bairros'][b].length > 0)
+                    .sort();
+
+                bairros.forEach(bairro => {
+                    const option = document.createElement('option');
+                    option.value = bairro;
+                    const locaisCount = window.RIO_REGIOES_BAIRROS[regiao]['bairros'][bairro].length;
+                    option.textContent = `${bairro} (${locaisCount} locais)`;
+                    bairroSelect.appendChild(option);
+                });
+            });
+
+            // Listener para mudança de bairro
+            bairroSelect.addEventListener('change', (e) => {
+                const regiao = regioSelect.value;
+                const bairro = e.target.value;
+
+                if (!regiao || !bairro) {
+                    document.getElementById('rioLocaisWrapper').style.display = 'none';
+                    document.getElementById('rioEmptyState').style.display = 'block';
+                    return;
+                }
+
+                renderRioLocaisBairro(regiao, bairro);
+            });
+        }
+
+        function renderRioLocaisBairro(regiao, bairro) {
+            const locais = window.RIO_REGIOES_BAIRROS[regiao]['bairros'][bairro] || [];
+            const tbody = document.getElementById('rioLocaisBody');
+            tbody.innerHTML = '';
+
+            locais.forEach(local => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #2A3144';
+
+                // Classificações
+                let aquarioLabel = '🔴';
+                let aquarioColor = '#E74C3C';
+                if (local.tamanho_aquario_pct > 49) { aquarioLabel = '🟢'; aquarioColor = '#27AE60'; }
+                else if (local.tamanho_aquario_pct > 47) { aquarioLabel = '🔵'; aquarioColor = '#5DADE2'; }
+                else if (local.tamanho_aquario_pct > 45) { aquarioLabel = '🟡'; aquarioColor = '#F4D03F'; }
+
+                let exploracaoLabel = '🔴 Pouco';
+                let exploracaoColor = '#E74C3C';
+                if (local.indice_exploracao >= 4.4646) {
+                    exploracaoLabel = '🔥 Hiper';
+                    exploracaoColor = '#C0392B';
+                } else if (local.indice_exploracao >= 3.0935) {
+                    exploracaoLabel = '🟠 Expl';
+                    exploracaoColor = '#E59866';
+                } else if (local.indice_exploracao >= 2.0873) {
+                    exploracaoLabel = '🟡 Mod';
+                    exploracaoColor = '#F4D03F';
+                }
+
+                row.innerHTML = `
+                    <td style="padding: 0.75rem; color: var(--text-primary);">
+                        <strong>${local.local_nome}</strong><br>
+                        <small style="color: var(--text-secondary);">${local.local_endereco}</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; color: #E59866;">
+                        ${local.lula_votos.toLocaleString('pt-BR')}
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center;">
+                        <span style="color: ${aquarioColor};">${aquarioLabel}</span><br>
+                        <small>${local.tamanho_aquario_pct.toFixed(1)}%</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center;">
+                        <span style="color: ${exploracaoColor};">${exploracaoLabel}</span><br>
+                        <small>${local.indice_exploracao.toFixed(2)}%</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; color: #D7BEE8;">
+                        ${local.ocupacao_esquerda.toFixed(1)}%
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; color: #D4A574;">
+                        ${local.consistencia_historica.toFixed(1)}/10
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('rioLocaisCount').textContent = locais.length;
+            document.getElementById('rioBairroInfo').textContent = `${bairro} • ${regiao}`;
+            document.getElementById('rioLocaisWrapper').style.display = 'block';
+            document.getElementById('rioEmptyState').style.display = 'none';
+        }
+
         function renderRioBairros() {
             if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.municipios) {
                 console.error('❌ Dados não carregados');
