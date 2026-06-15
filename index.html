@@ -2758,18 +2758,18 @@
                     if (volume >= p66) volumeLabel = '📈';
                     else if (volume >= p33) volumeLabel = '📊';
 
-                    // Classificação quartil-based: proporção Lindbergh/Lula vs média estadual
+                    // Classificação quartil-based: % Lindbergh/Lula
                     let exploracaoLabel = '🔴 Pouco explorado';
                     let exploracaoColor = '#E74C3C';
-                    if (exploracao >= 0.380247) {
+                    if (exploracao >= 4.4646) {
                         exploracaoLabel = '🔥 Hiperexplorado';
                         exploracaoColor = '#C0392B';
                     }
-                    else if (exploracao >= 0.371127) {
+                    else if (exploracao >= 3.0935) {
                         exploracaoLabel = '🟠 Explorado';
                         exploracaoColor = '#E59866';
                     }
-                    else if (exploracao >= 0.355134) {
+                    else if (exploracao >= 2.0873) {
                         exploracaoLabel = '🟡 Moderado';
                         exploracaoColor = '#F4D03F';
                     }
