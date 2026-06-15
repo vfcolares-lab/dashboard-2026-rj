@@ -2290,6 +2290,12 @@
 
             console.log('✅ MUNICIPIOS_COORDS disponível, iniciando mapa com', Object.keys(window.MUNICIPIOS_COORDS).length, 'coordenadas');
 
+            // Verificar se mapa já foi inicializado
+            if (mapInstance !== null) {
+                console.log('⚠️ Mapa já inicializado, pulando...');
+                return;
+            }
+
             // Criar o mapa DEPOIS de confirmar que coords foram carregadas
             mapInstance = L.map('map').setView([-25.5, -51.5], 7);
 
@@ -2804,7 +2810,7 @@
                         </td>
                         <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
                             <span style="color: ${exploracaoColor};">${exploracaoLabel}</span><br>
-                            <small>${exploracao.toFixed(2)}x</small>
+                            <small>${exploracao.toFixed(2)}%</small>
                         </td>
                         <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
                             <span style="color: #D7BEE8; font-weight: 600;">${(local.ocupacao_esquerda || 37.75).toFixed(1)}%</span>
