@@ -599,6 +599,7 @@
                                         <th style="text-align: left; padding: 0.75rem; color: #E59866; cursor: pointer; user-select: none; transition: opacity 0.2s;" onclick="sortOportunidades('volume')" title="Clique para ordenar">📊 Volume <span id="sort-volume"></span></th>
                                         <th style="text-align: left; padding: 0.75rem; color: #5DADE2; cursor: pointer; user-select: none; transition: opacity 0.2s;" onclick="sortOportunidades('aquario')" title="Clique para ordenar">🌊 Aquário <span id="sort-aquario"></span></th>
                                         <th style="text-align: left; padding: 0.75rem; color: #82E0AA; cursor: pointer; user-select: none; transition: opacity 0.2s;" onclick="sortOportunidades('exploracao')" title="Clique para ordenar">🎯 Exploração <span id="sort-exploracao"></span></th>
+                                        <th style="text-align: left; padding: 0.75rem; color: #D7BEE8;">🗳️ Ocupação Esq.</th>
                                         <th style="text-align: left; padding: 0.75rem; color: #27AE60;">🏘️ Município</th>
                                     </tr>
                                 </thead>
@@ -777,6 +778,7 @@
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">🌊 Aquário</th>
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">📊 Volume</th>
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">🎯 Exploração</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">🗳️ Ocup. Esq.</th>
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">📈 Consistência</th>
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">Lat/Lon</th>
                                 </tr>
@@ -1276,6 +1278,7 @@
                     <td style="padding: 0.75rem; color: #E59866; font-weight: 500;">${local.volume_eleitoral || 0} votos</td>
                     <td style="padding: 0.75rem; color: #5DADE2; font-weight: 500;">${local.tamanho_aquario_pct?.toFixed(1) || 'N/A'}%</td>
                     <td style="padding: 0.75rem; color: #82E0AA; font-weight: 500;">${(local.indice_exploracao || 0).toFixed(4)}</td>
+                    <td style="padding: 0.75rem; color: #D7BEE8; font-weight: 500;">${(local.ocupacao_esquerda || 0).toFixed(1)}%</td>
                     <td style="padding: 0.75rem; color: #27AE60;">${local.municipio || 'N/A'}</td>
                 `;
                 tbody.appendChild(row);
@@ -1348,6 +1351,7 @@
                     <td style="padding: 0.75rem; color: #E59866; font-weight: 500;">${local.volume_eleitoral || 0} votos</td>
                     <td style="padding: 0.75rem; color: #5DADE2; font-weight: 500;">${local.tamanho_aquario_pct?.toFixed(1) || 'N/A'}%</td>
                     <td style="padding: 0.75rem; color: #82E0AA; font-weight: 500;">${(local.indice_exploracao || 0).toFixed(4)}</td>
+                    <td style="padding: 0.75rem; color: #D7BEE8; font-weight: 500;">${(local.ocupacao_esquerda || 0).toFixed(1)}%</td>
                     <td style="padding: 0.75rem; color: #27AE60;">${local.municipio || 'N/A'}</td>
                 `;
                 tbody.appendChild(row);
@@ -1376,6 +1380,7 @@
                 'Aquário (%)',
                 'Índice Exploração',
                 'Categoria Exploração',
+                'Ocupação Esquerda (%)',
                 'Consistência Histórica',
                 'Votos Lindbergh',
                 'Lat/Lon'
@@ -1390,6 +1395,7 @@
                 (local.tamanho_aquario_pct || 0).toFixed(1),
                 (local.indice_exploracao || 0).toFixed(4),
                 getClassificacaoExplacacao(local.indice_exploracao) || 'N/A',
+                (local.ocupacao_esquerda || 0).toFixed(1),
                 (local.consistencia_historica || 0).toFixed(1),
                 local.lindbergh_votos || 0,
                 local.latitude && local.longitude ? `${local.latitude},${local.longitude}` : ''
@@ -2799,6 +2805,9 @@
                         <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
                             <span style="color: ${exploracaoColor};">${exploracaoLabel}</span><br>
                             <small>${exploracao.toFixed(2)}x</small>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            <span style="color: #D7BEE8; font-weight: 600;">${(local.ocupacao_esquerda || 37.75).toFixed(1)}%</span>
                         </td>
                         <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
                             <span style="color: ${consistenciaColor};">${consistenciaLabel}</span><br>
