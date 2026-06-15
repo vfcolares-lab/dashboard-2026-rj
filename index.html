@@ -679,10 +679,10 @@
                             </p>
                             <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem;">
                                 <strong>Classificação (Quartis):</strong><br>
-                                • 🔴 Pouco Explorado: &lt;0.9529 (bottom 25%)<br>
-                                • 🟡 Moderado: 0.9529-0.9958 (25-50%)<br>
-                                • 🟠 Explorado: 0.9958-1.0203 (50-75%)<br>
-                                • 🔥 Hiperexplorado: ≥1.0203 (top 25%)
+                                • 🔴 Pouco Explorado: &lt;0.3551 (bottom 25%)<br>
+                                • 🟡 Moderado: 0.3551-0.3711 (25-50%)<br>
+                                • 🟠 Explorado: 0.3711-0.3802 (50-75%)<br>
+                                • 🔥 Hiperexplorado: ≥0.3802 (top 25%)
                             </div>
                             <p style="font-size: 0.8rem; color: var(--text-muted);">
                                 <em>Responde:</em> Lindbergh já capturou o potencial deste território?
@@ -1378,10 +1378,10 @@
         }
 
         function getClassificacaoExplacacao(indice) {
-            // Limites quartil-based: 25% cada categoria
-            if (indice < 0.9529) return 'Pouco explorado';
-            if (indice < 0.9958) return 'Moderado';
-            if (indice < 1.0203) return 'Explorado';
+            // Limites quartil-based: proporção Lindbergh/Lula local vs estado (0.039567)
+            if (indice < 0.355134) return 'Pouco explorado';
+            if (indice < 0.371127) return 'Moderado';
+            if (indice < 0.380247) return 'Explorado';
             return 'Hiperexplorado';
         }
 
@@ -2650,18 +2650,18 @@
                     if (volume >= p66) volumeLabel = '📈';
                     else if (volume >= p33) volumeLabel = '📊';
 
-                    // Classificação quartil-based: distribuição 25% cada
+                    // Classificação quartil-based: proporção Lindbergh/Lula vs média estadual
                     let exploracaoLabel = '🔴 Pouco explorado';
                     let exploracaoColor = '#E74C3C';
-                    if (exploracao >= 1.0203) {
+                    if (exploracao >= 0.380247) {
                         exploracaoLabel = '🔥 Hiperexplorado';
-                        exploracaoColor = '#E74C3C';
+                        exploracaoColor = '#C0392B';
                     }
-                    else if (exploracao >= 0.9958) {
+                    else if (exploracao >= 0.371127) {
                         exploracaoLabel = '🟠 Explorado';
                         exploracaoColor = '#E59866';
                     }
-                    else if (exploracao >= 0.9529) {
+                    else if (exploracao >= 0.355134) {
                         exploracaoLabel = '🟡 Moderado';
                         exploracaoColor = '#F4D03F';
                     }

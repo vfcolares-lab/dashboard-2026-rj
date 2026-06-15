@@ -1,0 +1,67 @@
+headersOrigin = "config"
+redirectsOrigin = "config"
+plugins = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/Users/vitorcolares/Desktop/dashboard-2026-rj"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "echo 'Static site - no build needed'"
+
+[build.environment]
+NODE_ENV = "production"
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[headers]]
+for = "/"
+
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/data-rj.js"
+
+[headers.values]
+Cache-Control = "public, max-age=3600"
+Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+for = "/secoes_2022_rj.js"
+
+[headers.values]
+Cache-Control = "public, max-age=3600"
+Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+for = "/*.json"
+
+[headers.values]
+Cache-Control = "public, max-age=3600"
+Content-Type = "application/json"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
