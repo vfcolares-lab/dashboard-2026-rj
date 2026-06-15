@@ -850,17 +850,6 @@
                         </p>
                     </div>
 
-                    <!-- Legenda de regiões -->
-                    <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #2A3144;">
-                        <h3 style="margin-bottom: 1rem; color: #82E0AA;">📍 Regiões (AP)</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div>🔵 <strong>AP 1:</strong> Centro, Lapa, Orla</div>
-                            <div>🟠 <strong>AP 2:</strong> Botafogo, Copacabana, Lagoa</div>
-                            <div>🟢 <strong>AP 3:</strong> Grande Rio, Zona Norte</div>
-                            <div>🔴 <strong>AP 4:</strong> Barra, Jacarepaguá</div>
-                            <div>🟣 <strong>AP 5:</strong> Extremo Oeste</div>
-                        </div>
-                    </div>
 
                     <!-- Dropdowns -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
@@ -2956,6 +2945,14 @@
         }
 
         // ============= RIO BAIRROS =============
+        const AP_LABELS = {
+            'AP 1': '🔵 AP 1: Centro, Lapa, Orla',
+            'AP 2': '🟠 AP 2: Botafogo, Copacabana, Lagoa',
+            'AP 3': '🟢 AP 3: Grande Rio, Zona Norte',
+            'AP 4': '🔴 AP 4: Barra, Jacarepaguá',
+            'AP 5': '🟣 AP 5: Extremo Oeste'
+        };
+
         function renderRioSelectors() {
             if (!window.RIO_REGIOES_BAIRROS) return;
 
@@ -2966,7 +2963,7 @@
             Object.keys(window.RIO_REGIOES_BAIRROS).sort().forEach(regiao => {
                 const option = document.createElement('option');
                 option.value = regiao;
-                option.textContent = regiao;
+                option.textContent = AP_LABELS[regiao] || regiao;
                 regioSelect.appendChild(option);
             });
 
