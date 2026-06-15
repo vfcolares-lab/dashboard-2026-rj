@@ -1424,10 +1424,10 @@
         }
 
         function getClassificacaoExplacacao(indice) {
-            // Limites quartil-based: proporção Lindbergh/Lula local vs estado (0.039567)
-            if (indice < 0.355134) return 'Pouco explorado';
-            if (indice < 0.371127) return 'Moderado';
-            if (indice < 0.380247) return 'Explorado';
+            // Limites quartil-based: % Lindbergh/Lula (0-100%)
+            if (indice < 2.0873) return 'Pouco explorado';
+            if (indice < 3.0935) return 'Moderado';
+            if (indice < 4.4646) return 'Explorado';
             return 'Hiperexplorado';
         }
 
