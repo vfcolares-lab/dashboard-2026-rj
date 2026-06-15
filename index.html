@@ -523,7 +523,7 @@
                     </div>
 
                     <!-- 4 Indicadores Estratégicos -->
-                    <h3 style="margin: 2rem 0 1rem;">🎯 4 Indicadores Estratégicos</h3>
+                    <h3 style="margin: 2rem 0 1rem;">🎯 5 Indicadores Estratégicos</h3>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
                         <!-- 1. Tamanho do Aquário -->
                         <div style="background: linear-gradient(135deg, #1E3A5F 0%, #1A1F2E 100%); border: 1px solid #2A4A7F; border-radius: 8px; padding: 1.5rem;">
@@ -555,6 +555,14 @@
                             <div style="font-size: 2.5rem; font-weight: 700; color: #D4A574; margin-bottom: 0.5rem;">7.1/10</div>
                             <p style="color: var(--text-secondary); font-size: 0.85rem;">Estabilidade média dos locais</p>
                             <canvas id="chartConsistencia" style="max-height: 150px; margin-top: 1rem;"></canvas>
+                        </div>
+
+                        <!-- 5. Ocupação de Esquerda -->
+                        <div style="background: linear-gradient(135deg, #4A2B5F 0%, #1A1F2E 100%); border: 1px solid #7F5AAF; border-radius: 8px; padding: 1.5rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🗳️ Ocupação de Esquerda</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #D7BEE8; margin-bottom: 0.5rem;">37.8%</div>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem;">% votos Lula capturados por esquerda</p>
+                            <canvas id="chartOcupacao" style="max-height: 150px; margin-top: 1rem;"></canvas>
                         </div>
                     </div>
 
@@ -619,6 +627,29 @@
                                 <h4 style="color: #D4A574; margin-bottom: 0.5rem;">📈 Consistência Histórica</h4>
                                 <p style="font-size: 0.85rem; color: var(--text-secondary);">Estabilidade eleitoral (baseada na distribuição do Aquário). Range: 4.0-8.5/10</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Votos de Legenda PT -->
+                    <h3 style="margin: 2rem 0 1rem;">🗳️ Votos de Legenda PT (Deputado Federal)</h3>
+                    <div style="background: var(--bg-card); border: 1px solid #2A3144; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                                Locais de votação com maior quantidade de votos de legenda PT (eleitor votou apenas no partido, sem escolher candidato).
+                            </p>
+                            <button id="btnDownloadLegendaPT" style="background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; white-space: nowrap;">⬇️ Baixar CSV</button>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table id="tableLegendaPT" style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+                                <thead style="background-color: #1A1F2E; border-bottom: 2px solid #2A3144;">
+                                    <tr>
+                                        <th style="text-align: left; padding: 0.75rem; color: #5DADE2;">📍 Local de Votação</th>
+                                        <th style="text-align: center; padding: 0.75rem; color: #F39C12;">🗳️ Votos Legenda PT</th>
+                                        <th style="text-align: center; padding: 0.75rem; color: #E59866;">% do Lula</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyLegendaPT"></tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -1262,6 +1293,15 @@
                 btnDownload.onclick = downloadOportunidadesCSV;
             }
 
+            // Adicionar listener ao botão de download de Legenda PT
+            const btnDownloadLegendaPT = document.getElementById('btnDownloadLegendaPT');
+            if (btnDownloadLegendaPT) {
+                btnDownloadLegendaPT.onclick = downloadLegendaPTCSV;
+            }
+
+            // Popular tabela de Legenda PT
+            populateLegendaPT();
+
             // Inicializar estado de ordenação
             window.sortOportunidadesState = { field: 'aquario', direction: 'desc' };
         }
@@ -1383,6 +1423,68 @@
             if (indice < 0.371127) return 'Moderado';
             if (indice < 0.380247) return 'Explorado';
             return 'Hiperexplorado';
+        }
+
+        // ============= VOTOS DE LEGENDA PT =============
+        const LEGENDA_PT_DATA = [
+            { endereco: 'RUA PRINCIPAL S/N', votos: 182, pct_lula: 2.2 },
+            { endereco: 'AVENIDA PAULO DE FRONTIN 1', votos: 151, pct_lula: 3.3 },
+            { endereco: 'RUA BARAO DO BOM RETIRO 726', votos: 130, pct_lula: 3.5 },
+            { endereco: 'RUA EDGARD WERNECK, 1565', votos: 126, pct_lula: 4.1 },
+            { endereco: 'RUA MARQUÊS DE ABRANTES, 55', votos: 123, pct_lula: 2.1 },
+            { endereco: 'ESTRADA DO ENGENHO S/N', votos: 118, pct_lula: 3.7 },
+            { endereco: 'RUA CONDE DE BONFIM, 1067', votos: 118, pct_lula: 2.8 },
+            { endereco: 'RUA JOSE FERNANDES S/N', votos: 116, pct_lula: 3.1 },
+            { endereco: 'RUA DR. FRANCISCO PORTELA 794', votos: 115, pct_lula: 2.8 },
+            { endereco: 'RUA ALMIRANTE ALEXANDRINO 2495', votos: 109, pct_lula: 2.6 },
+            { endereco: 'ESTRADA DA GÁVEA, 899', votos: 109, pct_lula: 2.6 },
+            { endereco: 'ESTRADA SANTA EUGENIA S/N - PACIÊNCIA - RIO DE JANEIRO/RJ', votos: 106, pct_lula: 3.9 },
+            { endereco: 'AVENIDA MANUEL CALDEIRA DE ALVARENGA 1003', votos: 105, pct_lula: 3.9 },
+            { endereco: 'AUTO ESTRADA ENG. FERNANDO MAC DOWELL, 15-A', votos: 105, pct_lula: 2.7 },
+            { endereco: 'AVENIDA PARIS 72', votos: 104, pct_lula: 2.6 }
+        ];
+
+        function populateLegendaPT() {
+            const tbody = document.getElementById('tbodyLegendaPT');
+            if (!tbody) return;
+
+            tbody.innerHTML = LEGENDA_PT_DATA.map((local, idx) => `
+                <tr style="border-bottom: 1px solid #2A3144; ${idx % 2 === 0 ? 'background-color: rgba(255,255,255,0.02);' : ''}">
+                    <td style="padding: 0.75rem; color: #5DADE2;">${local.endereco}</td>
+                    <td style="padding: 0.75rem; color: #F39C12; text-align: center; font-weight: 500;">${local.votos}</td>
+                    <td style="padding: 0.75rem; color: #E59866; text-align: center;">${local.pct_lula.toFixed(1)}%</td>
+                </tr>
+            `).join('');
+
+            console.log(`✅ Legenda PT: ${LEGENDA_PT_DATA.length} locais carregados`);
+        }
+
+        function downloadLegendaPTCSV() {
+            const headers = ['Local de Votação', 'Votos Legenda PT', '% do Lula'];
+            const rows = LEGENDA_PT_DATA.map(local => [
+                `"${local.endereco.replace(/"/g, '""')}"`,
+                local.votos,
+                local.pct_lula.toFixed(1)
+            ]);
+
+            let csv = headers.join(';') + '\n';
+            rows.forEach(row => {
+                csv += row.join(';') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `votos_legenda_pt_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log(`✅ CSV com votos de legenda PT baixado!`);
         }
 
         // ============= PREDITIVO 2026 =============
