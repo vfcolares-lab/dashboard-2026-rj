@@ -1,0 +1,211 @@
+[
+  {
+    "bairro": "Santa Teresa",
+    "locais": 279,
+    "lula_votos": 290926,
+    "bolsonaro_votos": 337502,
+    "lindbergh_votos": 9728,
+    "aquario_pct": 46.47151576286926,
+    "exploracao_media": 3.218652475365352,
+    "ocupacao_esquerda": 46.49779856683499,
+    "consistencia_media": 7.421146953405018
+  },
+  {
+    "bairro": "Centro",
+    "locais": 137,
+    "lula_votos": 154830,
+    "bolsonaro_votos": 177440,
+    "lindbergh_votos": 5100,
+    "aquario_pct": 47.26857266318241,
+    "exploracao_media": 3.2463694762276547,
+    "ocupacao_esquerda": 46.23060337458693,
+    "consistencia_media": 7.386861313868613
+  },
+  {
+    "bairro": "Lapa",
+    "locais": 113,
+    "lula_votos": 139103,
+    "bolsonaro_votos": 147472,
+    "lindbergh_votos": 4774,
+    "aquario_pct": 48.03459220042221,
+    "exploracao_media": 3.2870994106262525,
+    "ocupacao_esquerda": 46.489621917120786,
+    "consistencia_media": 7.402654867256637
+  },
+  {
+    "bairro": "Campo Grande",
+    "locais": 108,
+    "lula_votos": 134151,
+    "bolsonaro_votos": 145591,
+    "lindbergh_votos": 5871,
+    "aquario_pct": 48.86395286986453,
+    "exploracao_media": 4.01018969430373,
+    "ocupacao_esquerda": 46.386516371484866,
+    "consistencia_media": 7.513888888888889
+  },
+  {
+    "bairro": "Copacabana",
+    "locais": 110,
+    "lula_votos": 113738,
+    "bolsonaro_votos": 119219,
+    "lindbergh_votos": 4223,
+    "aquario_pct": 49.627006391599295,
+    "exploracao_media": 3.6455484478972924,
+    "ocupacao_esquerda": 47.429185687667534,
+    "consistencia_media": 7.590909090909091
+  },
+  {
+    "bairro": "Jacarepaguá",
+    "locais": 86,
+    "lula_votos": 102919,
+    "bolsonaro_votos": 113429,
+    "lindbergh_votos": 5547,
+    "aquario_pct": 47.645050272364884,
+    "exploracao_media": 4.387734922249876,
+    "ocupacao_esquerda": 45.21001596200479,
+    "consistencia_media": 7.616279069767442
+  },
+  {
+    "bairro": "Catete",
+    "locais": 85,
+    "lula_votos": 102178,
+    "bolsonaro_votos": 101137,
+    "lindbergh_votos": 3632,
+    "aquario_pct": 49.74101323667403,
+    "exploracao_media": 3.223603041157171,
+    "ocupacao_esquerda": 46.99204038185316,
+    "consistencia_media": 7.305882352941176
+  },
+  {
+    "bairro": "Barra da Tijuca",
+    "locais": 77,
+    "lula_votos": 94006,
+    "bolsonaro_votos": 106320,
+    "lindbergh_votos": 4126,
+    "aquario_pct": 47.92300951349475,
+    "exploracao_media": 3.9785891467657803,
+    "ocupacao_esquerda": 47.06826813895039,
+    "consistencia_media": 7.461038961038961
+  },
+  {
+    "bairro": "Flamengo",
+    "locais": 60,
+    "lula_votos": 76537,
+    "bolsonaro_votos": 74651,
+    "lindbergh_votos": 2578,
+    "aquario_pct": 49.82758103884522,
+    "exploracao_media": 3.3814053401389117,
+    "ocupacao_esquerda": 47.16228398303187,
+    "consistencia_media": 7.2
+  },
+  {
+    "bairro": "Botafogo",
+    "locais": 57,
+    "lula_votos": 66194,
+    "bolsonaro_votos": 67807,
+    "lindbergh_votos": 2070,
+    "aquario_pct": 49.691306956061965,
+    "exploracao_media": 3.1124277852500093,
+    "ocupacao_esquerda": 46.911239654240084,
+    "consistencia_media": 7.315789473684211
+  },
+  {
+    "bairro": "Laranjeiras",
+    "locais": 46,
+    "lula_votos": 60451,
+    "bolsonaro_votos": 59284,
+    "lindbergh_votos": 2111,
+    "aquario_pct": 49.99996774923267,
+    "exploracao_media": 3.357872512026393,
+    "ocupacao_esquerda": 46.84307518976783,
+    "consistencia_media": 7.456521739130435
+  },
+  {
+    "bairro": "Ipanema",
+    "locais": 43,
+    "lula_votos": 52834,
+    "bolsonaro_votos": 51295,
+    "lindbergh_votos": 2188,
+    "aquario_pct": 51.12050106697662,
+    "exploracao_media": 3.6459015507993513,
+    "ocupacao_esquerda": 47.15851176760831,
+    "consistencia_media": 7.686046511627907
+  },
+  {
+    "bairro": "Realengo",
+    "locais": 44,
+    "lula_votos": 50514,
+    "bolsonaro_votos": 60496,
+    "lindbergh_votos": 2003,
+    "aquario_pct": 45.876009921169604,
+    "exploracao_media": 3.6906471019831097,
+    "ocupacao_esquerda": 46.8701202297494,
+    "consistencia_media": 7.159090909090909
+  },
+  {
+    "bairro": "Maracanã",
+    "locais": 36,
+    "lula_votos": 46747,
+    "bolsonaro_votos": 45174,
+    "lindbergh_votos": 1681,
+    "aquario_pct": 52.594375179653014,
+    "exploracao_media": 3.2177504715285186,
+    "ocupacao_esquerda": 46.50866305628933,
+    "consistencia_media": 7.388888888888889
+  },
+  {
+    "bairro": "Leblon",
+    "locais": 42,
+    "lula_votos": 42878,
+    "bolsonaro_votos": 46012,
+    "lindbergh_votos": 1710,
+    "aquario_pct": 48.72031410330191,
+    "exploracao_media": 3.6836266381426177,
+    "ocupacao_esquerda": 47.05157710016759,
+    "consistencia_media": 7.464285714285714
+  },
+  {
+    "bairro": "Vila Isabel",
+    "locais": 17,
+    "lula_votos": 23058,
+    "bolsonaro_votos": 25202,
+    "lindbergh_votos": 691,
+    "aquario_pct": 47.700725443392265,
+    "exploracao_media": 2.765620591041615,
+    "ocupacao_esquerda": 46.55086884493085,
+    "consistencia_media": 7.735294117647059
+  },
+  {
+    "bairro": "Méier",
+    "locais": 11,
+    "lula_votos": 11103,
+    "bolsonaro_votos": 11666,
+    "lindbergh_votos": 379,
+    "aquario_pct": 48.40221055266652,
+    "exploracao_media": 3.2517744203904737,
+    "ocupacao_esquerda": 47.32345373797264,
+    "consistencia_media": 8.045454545454545
+  },
+  {
+    "bairro": "Bangu",
+    "locais": 2,
+    "lula_votos": 2191,
+    "bolsonaro_votos": 2308,
+    "lindbergh_votos": 103,
+    "aquario_pct": 43.940966761035966,
+    "exploracao_media": 4.425005698655117,
+    "ocupacao_esquerda": 47.42730573263205,
+    "consistencia_media": 6.5
+  },
+  {
+    "bairro": "Zona Norte - São Gonçalo",
+    "locais": 1,
+    "lula_votos": 1974,
+    "bolsonaro_votos": 2283,
+    "lindbergh_votos": 41,
+    "aquario_pct": 46.37068357998591,
+    "exploracao_media": 2.077001013171226,
+    "ocupacao_esquerda": 44.3630003997611,
+    "consistencia_media": 8.5
+  }
+]
