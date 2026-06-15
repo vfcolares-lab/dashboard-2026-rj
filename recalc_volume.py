@@ -74,13 +74,9 @@ for municipio, dados in data['municipios'].items():
                 local['tamanho_aquario_pct'] = (lula_votos / total_votos) * 100
 
             # Recalcular Índice de Exploração
-            # Fórmula: (votos_lindbergh_local / votos_lula_local) / (total_lindbergh / total_lula)
-            total_lindbergh = data['metadata']['agregados_estaduais']['lindbergh_votos']
-            total_lula = data['metadata']['agregados_estaduais']['lula_votos']
-
-            taxa_estadual = total_lindbergh / total_lula if total_lula > 0 else 0
-            taxa_local = local.get('lindbergh_votos', 0) / lula_votos if lula_votos > 0 else 0
-            local['indice_exploracao'] = taxa_local / taxa_estadual if taxa_estadual > 0 else 0
+            # Fórmula: % de Lindbergh em relação aos votos Lula nesse local
+            lindbergh_local = local.get('lindbergh_votos', 0)
+            local['indice_exploracao'] = (lindbergh_local / lula_votos * 100) if lula_votos > 0 else 0
 
 # Atualizar agregados
 total_lula_rj = sum(v['lula'] for v in volume_por_municipio.values())
