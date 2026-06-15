@@ -888,6 +888,9 @@
                             <tbody id="rioLocaisBody">
                             </tbody>
                         </table>
+                        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                            <button id="rioDownloadBtn" style="padding: 0.75rem 1.5rem; background: #27AE60; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">⬇️ Baixar CSV</button>
+                        </div>
                     </div>
 
                     <div id="rioEmptyState" style="margin-top: 2rem; padding: 2rem; text-align: center; color: var(--text-secondary); background: var(--bg-card); border-radius: 8px;">
@@ -3061,6 +3064,37 @@
             document.getElementById('rioBairroInfo').textContent = `${bairro} • ${regiao}`;
             document.getElementById('rioLocaisWrapper').style.display = 'block';
             document.getElementById('rioEmptyState').style.display = 'none';
+
+            // Download CSV
+            document.getElementById('rioDownloadBtn').addEventListener('click', () => {
+                let csv = 'Local de Votação,Endereço,Votos Lula,Aquário %,Índice Exploração %,Ocupação Esquerda %,Consistência Histórica\n';
+
+                locais.forEach(local => {
+                    const nome = `"${local.local_nome.replace(/"/g, '""')}"`;
+                    const endereco = `"${local.local_endereco.replace(/"/g, '""')}"`;
+                    const votos = local.lula_votos;
+                    const aquario = local.tamanho_aquario_pct.toFixed(2);
+                    const exploracao = local.indice_exploracao.toFixed(2);
+                    const ocupacao = local.ocupacao_esquerda.toFixed(2);
+                    const consistencia = local.consistencia_historica.toFixed(2);
+
+                    csv += `${nome},${endereco},${votos},${aquario},${exploracao},${ocupacao},${consistencia}\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `rio_${regiao}_${bairro.replace(/\s+/g, '_')}.csv`);
+                link.style.visibility = 'hidden';
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                console.log(`✅ CSV baixado: rio_${regiao}_${bairro}.csv`);
+            });
         }
 
         function renderRioBairros() {
