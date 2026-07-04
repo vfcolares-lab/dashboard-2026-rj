@@ -884,6 +884,7 @@
                                     <th style="text-align: center; padding: 0.75rem; color: #82E0AA;">🎯 Exploração</th>
                                     <th style="text-align: center; padding: 0.75rem; color: #D7BEE8;">🏛️ Esquerda</th>
                                     <th style="text-align: center; padding: 0.75rem; color: #D4A574;">📈 Consistência</th>
+                                    <th style="text-align: center; padding: 0.75rem; color: #F39C12;">🎯 Prioridade</th>
                                 </tr>
                             </thead>
                             <tbody id="rioLocaisBody">
@@ -3161,6 +3162,10 @@
             const tbody = document.getElementById('rioLocaisBody');
             tbody.innerHTML = '';
 
+            // Chave para localStorage (regiao_bairro)
+            const storageKey = `prioridades_rio_${regiao}_${bairro}`;
+            const prioridades = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
             locais.forEach(local => {
                 const row = document.createElement('tr');
                 row.style.borderBottom = '1px solid #2A3144';
@@ -3185,6 +3190,10 @@
                     exploracaoColor = '#F4D03F';
                 }
 
+                // Prioridade
+                const prioridadeLocal = prioridades[local.local_nome] || '';
+                const prioridadeColor = getPrioridadeColor(prioridadeLocal);
+
                 row.innerHTML = `
                     <td style="padding: 0.75rem; color: var(--text-primary);">
                         <strong>${local.local_nome}</strong><br>
@@ -3207,8 +3216,29 @@
                     <td style="padding: 0.75rem; text-align: center; color: #D4A574;">
                         ${local.consistencia_historica.toFixed(1)}/10
                     </td>
+                    <td style="padding: 0.5rem; text-align: center;">
+                        <select class="rio-prioridade-select" data-local="${local.local_nome}" data-storage="${storageKey}" style="background-color: ${prioridadeColor}; color: white; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                            <option value="" ${prioridadeLocal === '' ? 'selected' : ''}>—</option>
+                            <option value="alta" ${prioridadeLocal === 'alta' ? 'selected' : ''}>Alta</option>
+                            <option value="media" ${prioridadeLocal === 'media' ? 'selected' : ''}>Média</option>
+                            <option value="baixa" ${prioridadeLocal === 'baixa' ? 'selected' : ''}>Baixa</option>
+                        </select>
+                    </td>
                 `;
                 tbody.appendChild(row);
+
+                // Event listener para o select
+                row.querySelector('.rio-prioridade-select').addEventListener('change', (e) => {
+                    const novaValue = e.target.value;
+                    const storageKeyLocal = e.target.getAttribute('data-storage');
+                    const localNameLocal = e.target.getAttribute('data-local');
+
+                    const prioridades = JSON.parse(localStorage.getItem(storageKeyLocal) || '{}');
+                    prioridades[localNameLocal] = novaValue;
+                    localStorage.setItem(storageKeyLocal, JSON.stringify(prioridades));
+
+                    e.target.style.backgroundColor = getPrioridadeColor(novaValue);
+                });
             });
 
             document.getElementById('rioLocaisCount').textContent = locais.length;
