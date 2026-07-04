@@ -782,6 +782,7 @@
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">🗳️ Ocup. Esq.</th>
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">📈 Consistência</th>
                                     <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144;">Lat/Lon</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid #2A3144; color: #F39C12;">🎯 Prioridade</th>
                                 </tr>
                             </thead>
                             <tbody id="indicadoresTableBody">
@@ -2814,6 +2815,118 @@
                 tbody.innerHTML = '';
                 let totalVolume = 0;
 
+                // Calcular agregados do município
+                let totalLula = 0;
+                let totalLindbergh = 0;
+                let totalBolsonaro = 0;
+                let somaAquario = 0;
+                let somaExploracao = 0;
+                let somaOcupacao = 0;
+                let somaConsistencia = 0;
+
+                locaisOrdenados.forEach(local => {
+                    totalLula += local.lula_votos || 0;
+                    totalLindbergh += local.lindbergh_votos || 0;
+                    totalBolsonaro += local.bolsonaro_votos || 0;
+                    somaAquario += local.tamanho_aquario_pct || 0;
+                    somaExploracao += local.indice_exploracao || 0;
+                    somaOcupacao += local.ocupacao_esquerda || 0;
+                    somaConsistencia += local.consistencia_historica || 0;
+                });
+
+                const mediaAquario = somaAquario / locaisOrdenados.length;
+                const mediaExploracao = somaExploracao / locaisOrdenados.length;
+                const mediaOcupacao = somaOcupacao / locaisOrdenados.length;
+                const mediaConsistencia = somaConsistencia / locaisOrdenados.length;
+
+                // PRIMEIRA LINHA: Resumo do Município
+                const resumoRow = document.createElement('tr');
+                resumoRow.style.backgroundColor = '#252D40';
+                resumoRow.style.fontWeight = 'bold';
+                resumoRow.style.borderTop = '2px solid #82E0AA';
+                resumoRow.style.borderBottom = '2px solid #82E0AA';
+
+                // Classificações para resumo
+                let resumoAquarioLabel = '?';
+                let resumoAquarioColor = '#888';
+                if (mediaAquario > 45.9) { resumoAquarioLabel = '🟢'; resumoAquarioColor = '#27AE60'; }
+                else if (mediaAquario > 42.8) { resumoAquarioLabel = '🔵'; resumoAquarioColor = '#5DADE2'; }
+                else if (mediaAquario > 37) { resumoAquarioLabel = '🟡'; resumoAquarioColor = '#F4D03F'; }
+                else { resumoAquarioLabel = '🔴'; resumoAquarioColor = '#E74C3C'; }
+
+                let resumoExploracaoLabel = '🔴 Pouco';
+                let resumoExploracaoColor = '#E74C3C';
+                if (mediaExploracao >= 4.4646) {
+                    resumoExploracaoLabel = '🔥 Hiper';
+                    resumoExploracaoColor = '#C0392B';
+                }
+                else if (mediaExploracao >= 3.0935) {
+                    resumoExploracaoLabel = '🟠 Expl';
+                    resumoExploracaoColor = '#E59866';
+                }
+                else if (mediaExploracao >= 2.0873) {
+                    resumoExploracaoLabel = '🟡 Mod';
+                    resumoExploracaoColor = '#F4D03F';
+                }
+
+                let resumoConsistenciaLabel = '⚖️';
+                let resumoConsistenciaColor = '#F4D03F';
+                if (mediaConsistencia >= 8.50) { resumoConsistenciaLabel = '🏔️ Est'; resumoConsistenciaColor = '#27AE60'; }
+                else if (mediaConsistencia >= 7.50) { resumoConsistenciaLabel = '⚖️ Est'; resumoConsistenciaColor = '#82E0AA'; }
+                else if (mediaConsistencia >= 6.00) { resumoConsistenciaLabel = '🌊 Inst'; resumoConsistenciaColor = '#F4D03F'; }
+                else { resumoConsistenciaLabel = '🌀 MI'; resumoConsistenciaColor = '#E74C3C'; }
+
+                const prioridades = getPrioridades(municipioSelecionado);
+                const prioridadeResumo = prioridades['__RESUMO__'] || '';
+                const prioridadeColorResumo = getPrioridadeColor(prioridadeResumo);
+
+                resumoRow.innerHTML = `
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #2A3144;">
+                        <strong>📊 ${municipioSelecionado}</strong>
+                    </td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #2A3144; font-size: 0.85rem; color: #82E0AA;">
+                        <strong>RESUMO DO MUNICÍPIO</strong>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                        <span style="color: ${resumoAquarioColor}; font-weight: 600;">${resumoAquarioLabel}</span><br>
+                        <small>${mediaAquario.toFixed(1)}%</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                        <strong>📊</strong><br>
+                        <small>${(totalLula/1000).toFixed(1)}k</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                        <span style="color: ${resumoExploracaoColor};">${resumoExploracaoLabel}</span><br>
+                        <small>${mediaExploracao.toFixed(2)}%</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                        <span style="color: #D7BEE8; font-weight: 600;">${mediaOcupacao.toFixed(1)}%</span>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                        <span style="color: ${resumoConsistenciaColor};">${resumoConsistenciaLabel}</span><br>
+                        <small>${mediaConsistencia.toFixed(1)}/10</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144; font-size: 0.8rem;">
+                        —
+                    </td>
+                    <td style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                        <select class="prioridade-select" data-tipo="resumo" style="background-color: ${prioridadeColorResumo}; color: white; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                            <option value="" ${prioridadeResumo === '' ? 'selected' : ''}>—</option>
+                            <option value="alta" ${prioridadeResumo === 'alta' ? 'selected' : ''}>Alta</option>
+                            <option value="media" ${prioridadeResumo === 'media' ? 'selected' : ''}>Média</option>
+                            <option value="baixa" ${prioridadeResumo === 'baixa' ? 'selected' : ''}>Baixa</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(resumoRow);
+
+                // Event listener para o select do resumo
+                resumoRow.querySelector('.prioridade-select').addEventListener('change', (e) => {
+                    const novaValue = e.target.value;
+                    setPrioridade(municipioSelecionado, '__RESUMO__', novaValue);
+                    e.target.style.backgroundColor = getPrioridadeColor(novaValue);
+                });
+
                 locaisOrdenados.forEach(local => {
                     const aquario = local.tamanho_aquario_pct || 0;
                     const volume = local.volume_eleitoral || 0;
@@ -2862,6 +2975,9 @@
                     else if (consistencia >= 6.00) { consistenciaLabel = '🌊 Instável'; consistenciaColor = '#F4D03F'; }
                     else { consistenciaLabel = '🌀 Muito Instável'; consistenciaColor = '#E74C3C'; }
 
+                    const prioridadeLocal = prioridades[local.local_nome] || '';
+                    const prioridadeColorLocal = getPrioridadeColor(prioridadeLocal);
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td style="padding: 0.75rem; border-bottom: 1px solid #2A3144;">
@@ -2892,8 +3008,23 @@
                         <td style="padding: 0.75rem; text-align: center; border-bottom: 1px solid #2A3144; font-size: 0.8rem;">
                             ${lat}<br>${lon}
                         </td>
+                        <td style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #2A3144;">
+                            <select class="prioridade-select" data-local="${local.local_nome}" style="background-color: ${prioridadeColorLocal}; color: white; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                                <option value="" ${prioridadeLocal === '' ? 'selected' : ''}>—</option>
+                                <option value="alta" ${prioridadeLocal === 'alta' ? 'selected' : ''}>Alta</option>
+                                <option value="media" ${prioridadeLocal === 'media' ? 'selected' : ''}>Média</option>
+                                <option value="baixa" ${prioridadeLocal === 'baixa' ? 'selected' : ''}>Baixa</option>
+                            </select>
+                        </td>
                     `;
                     tbody.appendChild(row);
+
+                    // Event listener para o select do local
+                    row.querySelector('.prioridade-select').addEventListener('change', (e) => {
+                        const novaValue = e.target.value;
+                        setPrioridade(municipioSelecionado, local.local_nome, novaValue);
+                        e.target.style.backgroundColor = getPrioridadeColor(novaValue);
+                    });
                 });
 
                 // Mostrar tabela e esconder empty state
@@ -2945,6 +3076,26 @@
 
                 console.log(`✅ CSV baixado: indicadores_${municipioSelecionado}.csv`);
             });
+        }
+
+        // ============= PRIORIDADES (localStorage) =============
+        function getPrioridades(municipio) {
+            const data = localStorage.getItem(`prioridades_${municipio}`);
+            return data ? JSON.parse(data) : {};
+        }
+
+        function setPrioridade(municipio, localNome, prioridade) {
+            const prioridades = getPrioridades(municipio);
+            prioridades[localNome] = prioridade;
+            localStorage.setItem(`prioridades_${municipio}`, JSON.stringify(prioridades));
+        }
+
+        function getPrioridadeColor(prioridade) {
+            if (!prioridade) return '#888888';
+            if (prioridade === 'alta') return '#27AE60';
+            if (prioridade === 'media') return '#F39C12';
+            if (prioridade === 'baixa') return '#E74C3C';
+            return '#888888';
         }
 
         // ============= RIO BAIRROS =============
