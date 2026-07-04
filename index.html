@@ -3166,6 +3166,110 @@
             const storageKey = `prioridades_rio_${regiao}_${bairro}`;
             const prioridades = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
+            // PRIMEIRA LINHA: Resumo do Bairro
+            if (locais.length > 0) {
+                const resumoRow = document.createElement('tr');
+                resumoRow.style.backgroundColor = '#252D40';
+                resumoRow.style.fontWeight = 'bold';
+                resumoRow.style.borderTop = '2px solid #82E0AA';
+                resumoRow.style.borderBottom = '2px solid #82E0AA';
+
+                // Calcular agregados do bairro
+                let totalLula = 0;
+                let somaAquario = 0;
+                let somaExploracao = 0;
+                let somaOcupacao = 0;
+                let somaConsistencia = 0;
+
+                locais.forEach(local => {
+                    totalLula += local.lula_votos || 0;
+                    somaAquario += local.tamanho_aquario_pct || 0;
+                    somaExploracao += local.indice_exploracao || 0;
+                    somaOcupacao += local.ocupacao_esquerda || 0;
+                    somaConsistencia += local.consistencia_historica || 0;
+                });
+
+                const mediaAquario = somaAquario / locais.length;
+                const mediaExploracao = somaExploracao / locais.length;
+                const mediaOcupacao = somaOcupacao / locais.length;
+                const mediaConsistencia = somaConsistencia / locais.length;
+
+                // Classificações para resumo
+                let resumoAquarioLabel = '?';
+                let resumoAquarioColor = '#888';
+                if (mediaAquario > 49) { resumoAquarioLabel = '🟢'; resumoAquarioColor = '#27AE60'; }
+                else if (mediaAquario > 47) { resumoAquarioLabel = '🔵'; resumoAquarioColor = '#5DADE2'; }
+                else if (mediaAquario > 45) { resumoAquarioLabel = '🟡'; resumoAquarioColor = '#F4D03F'; }
+                else { resumoAquarioLabel = '🔴'; resumoAquarioColor = '#E74C3C'; }
+
+                let resumoExploracaoLabel = '🔴 Pouco';
+                let resumoExploracaoColor = '#E74C3C';
+                if (mediaExploracao >= 4.4646) {
+                    resumoExploracaoLabel = '🔥 Hiper';
+                    resumoExploracaoColor = '#C0392B';
+                } else if (mediaExploracao >= 3.0935) {
+                    resumoExploracaoLabel = '🟠 Expl';
+                    resumoExploracaoColor = '#E59866';
+                } else if (mediaExploracao >= 2.0873) {
+                    resumoExploracaoLabel = '🟡 Mod';
+                    resumoExploracaoColor = '#F4D03F';
+                }
+
+                let resumoConsistenciaLabel = '⚖️';
+                let resumoConsistenciaColor = '#F4D03F';
+                if (mediaConsistencia >= 8.50) { resumoConsistenciaLabel = '🏔️ Est'; resumoConsistenciaColor = '#27AE60'; }
+                else if (mediaConsistencia >= 7.50) { resumoConsistenciaLabel = '⚖️ Est'; resumoConsistenciaColor = '#82E0AA'; }
+                else if (mediaConsistencia >= 6.00) { resumoConsistenciaLabel = '🌊 Inst'; resumoConsistenciaColor = '#F4D03F'; }
+                else { resumoConsistenciaLabel = '🌀 MI'; resumoConsistenciaColor = '#E74C3C'; }
+
+                const prioridadeResumo = prioridades['__RESUMO__'] || '';
+                const prioridadeColorResumo = getPrioridadeColor(prioridadeResumo);
+
+                resumoRow.innerHTML = `
+                    <td style="padding: 0.75rem; color: #82E0AA;">
+                        <strong>📊 ${bairro}</strong>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; color: #E59866;">
+                        <strong>RESUMO</strong><br>
+                        <small>${(totalLula/1000).toFixed(1)}k</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center;">
+                        <span style="color: ${resumoAquarioColor}; font-weight: 600;">${resumoAquarioLabel}</span><br>
+                        <small>${mediaAquario.toFixed(1)}%</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center;">
+                        <span style="color: ${resumoExploracaoColor};">${resumoExploracaoLabel}</span><br>
+                        <small>${mediaExploracao.toFixed(2)}%</small>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; color: #D7BEE8;">
+                        ${mediaOcupacao.toFixed(1)}%
+                    </td>
+                    <td style="padding: 0.75rem; text-align: center; color: ${resumoConsistenciaColor};">
+                        ${resumoConsistenciaLabel}<br>
+                        <small>${mediaConsistencia.toFixed(1)}/10</small>
+                    </td>
+                    <td style="padding: 0.5rem; text-align: center;">
+                        <select class="rio-prioridade-select" data-local="__RESUMO__" data-storage="${storageKey}" style="background-color: ${prioridadeColorResumo}; color: white; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                            <option value="" ${prioridadeResumo === '' ? 'selected' : ''}>—</option>
+                            <option value="alta" ${prioridadeResumo === 'alta' ? 'selected' : ''}>Alta</option>
+                            <option value="media" ${prioridadeResumo === 'media' ? 'selected' : ''}>Média</option>
+                            <option value="baixa" ${prioridadeResumo === 'baixa' ? 'selected' : ''}>Baixa</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(resumoRow);
+
+                // Event listener para o select do resumo
+                resumoRow.querySelector('.rio-prioridade-select').addEventListener('change', (e) => {
+                    const novaValue = e.target.value;
+                    const storageKeyLocal = e.target.getAttribute('data-storage');
+                    const prioridades = JSON.parse(localStorage.getItem(storageKeyLocal) || '{}');
+                    prioridades['__RESUMO__'] = novaValue;
+                    localStorage.setItem(storageKeyLocal, JSON.stringify(prioridades));
+                    e.target.style.backgroundColor = getPrioridadeColor(novaValue);
+                });
+            }
+
             locais.forEach(local => {
                 const row = document.createElement('tr');
                 row.style.borderBottom = '1px solid #2A3144';
