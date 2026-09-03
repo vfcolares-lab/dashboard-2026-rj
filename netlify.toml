@@ -22,6 +22,12 @@
     Content-Type = "application/javascript; charset=utf-8"
 
 [[headers]]
+  for = "/data-andre.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
   for = "/secoes_2022_rj.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
