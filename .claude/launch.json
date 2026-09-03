@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["server-local.js"],
       "port": 8000
+    },
+    {
+      "name": "dashboard-andre",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server-local.js"],
+      "port": 8001
     }
   ]
 }

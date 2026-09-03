@@ -501,7 +501,7 @@
             <div class="content-area">
                 <!-- 1. OVERVIEW -->
                 <section id="overview" class="section active">
-                    <h2 style="margin-bottom: 1.5rem;">📊 Overview — Rio de Janeiro 2026 | André Ceciliano</h2>
+                    <h2 style="margin-bottom: 1.5rem;">📊 Overview — Rio de Janeiro 2026 | Lindbergh Farias</h2>
 
                     <!-- Estatísticas Gerais -->
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
@@ -544,7 +544,7 @@
 
                         <!-- 3. Índice de Exploração -->
                         <div style="background: linear-gradient(135deg, #2F5233 0%, #1A1F2E 100%); border: 1px solid #4A7A4F; border-radius: 8px; padding: 1.5rem;">
-                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎯 Exploração de André Ceciliano</div>
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎯 Exploração de Lindbergh</div>
                             <div style="font-size: 2.5rem; font-weight: 700; color: #82E0AA; margin-bottom: 0.5rem;">0.92x</div>
                             <p style="color: var(--text-secondary); font-size: 0.85rem;">Proporção de exploração vs estado (3.96%)</p>
                             <canvas id="chartExploracao" style="max-height: 150px; margin-top: 1rem;"></canvas>
@@ -623,7 +623,7 @@
                             </div>
                             <div>
                                 <h4 style="color: #82E0AA; margin-bottom: 0.5rem;">🎯 Índice de Exploração</h4>
-                                <p style="font-size: 0.85rem; color: var(--text-secondary);">Percentual de votos Lindbergh em relação aos votos Lula em cada local. Quanto maior, maior a presença de André Ceciliano naquele eleitorado.<br><br><strong>Distribuição:</strong> Média 3.93% | Mediana 3.09% | Máximo 29.47%</p>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary);">Percentual de votos Lindbergh em relação aos votos Lula em cada local. Quanto maior, maior a presença de Lindbergh naquele eleitorado.<br><br><strong>Distribuição:</strong> Média 3.93% | Mediana 3.09% | Máximo 29.47%</p>
                             </div>
                             <div>
                                 <h4 style="color: #D4A574; margin-bottom: 0.5rem;">📈 Consistência Histórica</h4>
@@ -930,7 +930,7 @@
     </div>
 
     <!-- DATA -->
-    <script src="data-andre.js"></script>
+    <script src="data-rj.js"></script>
     <script src="secoes_2022_rj.js"></script>
     <script>
         // Carregar dados de regiões e bairros
@@ -1023,7 +1023,7 @@
             }
 
             if (!DASHBOARD_DATA_RJ || !DASHBOARD_DATA_RJ.municipios) {
-                console.error('❌ ERRO: data-andre.js não foi carregado!');
+                console.error('❌ ERRO: data-rj.js não foi carregado!');
                 console.error('   Certifique-se de que está usando HTTP (http://localhost:8000)');
                 alert('⚠️ ERRO: Dados não carregados.\n\nUse:\ncd relatorios tse/dashboard-2026\npython3 -m http.server 8000\n\nDepois acesse: http://localhost:8000');
                 return;
@@ -1100,7 +1100,7 @@
                         Bastião Petista
                         <div class="tooltip-container">
                             <span class="tooltip-icon">?</span>
-                            <span class="tooltip-text">Municípios onde PT venceu por >10pp em 2022. Base consolidada para André Ceciliano no contexto federal.</span>
+                            <span class="tooltip-text">Municípios onde PT venceu por >10pp em 2022. Base consolidada para Lindbergh no contexto federal.</span>
                         </div>
                     </div>
                 </div>
@@ -1454,7 +1454,7 @@
                 'Categoria Exploração',
                 'Ocupação Esquerda (%)',
                 'Consistência Histórica',
-                'Votos André Ceciliano 2018',
+                'Votos Lindbergh',
                 'Lat/Lon'
             ];
 
@@ -1629,7 +1629,7 @@
             const elem3 = document.getElementById('tendenciaLabel');
             if (elem3) {
                 elem3.textContent =
-                    bastiao > 0 ? 'Bastião André Ceciliano' :
+                    bastiao > 0 ? 'Bastião Lindbergh' :
                     forte > 0 ? 'Forte Pró-Lindbergh' :
                     competitivos > 0 ? 'Competitivo' : 'Difícil';
             }
@@ -2706,7 +2706,7 @@
             secoes_para_baixar.forEach(secao => {
                 if (!secao) return;
 
-                const lindberghPct = secao.votos_andre_2018h?.['2022_pct'] || 0;
+                const lindberghPct = secao.votos_lindbergh?.['2022_pct'] || 0;
                 const classificacao = secao.classificacao_secao || 'N/A';
 
                 const linha = [
