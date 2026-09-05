@@ -1,16 +1,16 @@
 {
   "name": "dashboard-2026-rj",
   "version": "1.0.0",
-  "description": "Dashboard Eleitoral Rio de Janeiro 2026 - Lindbergh Farias",
+  "description": "Dashboard Eleitoral Rio de Janeiro 2026 - André Ceciliano",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server-local.js"
   },
-  "keywords": ["eleições", "rio de janeiro", "lindbergh"],
+  "keywords": ["eleições", "rio de janeiro", "andré ceciliano", "deputado estadual"],
   "author": "Vitor Colares",
   "license": "MIT",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   }
 }
