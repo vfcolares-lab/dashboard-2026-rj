@@ -1,10 +1,12 @@
 # Don't ignore these files for deployment
 !index.html
+!data-andre.js
 !data-rj.js
 !secoes_2022_rj.js
 !server.js
 !package.json
 !vercel.json
+!netlify.toml
 
 # Ignore these
 .git
